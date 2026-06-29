@@ -6,6 +6,11 @@ import { defaultSubtitleStyle, type SubtitleStyle } from "@/scripts/subtitleStyl
 
 export type MediaKind = "video" | "audio";
 
+export interface SubtitleTrack {
+  lang: string; // código corto, "auto" si se autodetectó
+  segments: Segment[];
+}
+
 export interface MediaSession {
   file: File | null;
   kind: MediaKind | null;
@@ -19,8 +24,11 @@ export interface MediaSession {
   sourceLang: string | null;
   /** Idioma de los subtítulos de salida. */
   targetLang: string | null;
-  /** Segmentos transcritos. */
+  /** Segmentos de la pista activa (alias de tracks[activeTrack].segments). */
   segments: Segment[];
+  /** Pistas de subtítulos (una por idioma). */
+  tracks: SubtitleTrack[];
+  activeTrack: number;
   /** Estilo de subtítulo aplicado en el editor y el export. */
   style: SubtitleStyle;
 }
@@ -35,8 +43,27 @@ export const session: MediaSession = {
   sourceLang: null,
   targetLang: null,
   segments: [],
+  tracks: [],
+  activeTrack: 0,
   style: { ...defaultSubtitleStyle },
 };
+
+export function setTracks(tracks: SubtitleTrack[]): void {
+  session.tracks = tracks;
+  session.activeTrack = Math.max(0, tracks.length - 1);
+  session.segments = tracks[session.activeTrack]?.segments ?? [];
+}
+
+export function setActiveTrack(index: number): void {
+  if (index < 0 || index >= session.tracks.length) return;
+  session.activeTrack = index;
+  session.segments = session.tracks[index].segments;
+}
+
+export function addTrack(track: SubtitleTrack): number {
+  session.tracks.push(track);
+  return session.tracks.length - 1;
+}
 
 export function setFile(file: File, kind: MediaKind): void {
   resetMedia();
@@ -62,5 +89,7 @@ export function resetMedia(): void {
   session.sourceLang = null;
   session.targetLang = null;
   session.segments = [];
+  session.tracks = [];
+  session.activeTrack = 0;
   session.style = { ...defaultSubtitleStyle };
 }

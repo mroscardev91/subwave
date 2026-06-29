@@ -75,9 +75,10 @@ export function removeSegment(id: string): void {
   emit();
 }
 
-/** Reemplaza los segmentos (al deshacer/rehacer). */
+/** Reemplaza los segmentos de la pista activa (al deshacer/rehacer). */
 export function applySnapshot(segs: Segment[]): void {
   session.segments = segs;
+  if (session.tracks[session.activeTrack]) session.tracks[session.activeTrack].segments = segs;
   if (selectedId && !segs.some((s) => s.id === selectedId)) {
     selectedId = segs[0]?.id ?? null;
   }
