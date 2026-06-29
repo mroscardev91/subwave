@@ -2,6 +2,7 @@
 // editor → export). Nada de esto sale del navegador.
 
 import type { Segment } from "@/scripts/subtitles";
+import { defaultSubtitleStyle, type SubtitleStyle } from "@/scripts/subtitleStyle";
 
 export type MediaKind = "video" | "audio";
 
@@ -20,6 +21,8 @@ export interface MediaSession {
   targetLang: string | null;
   /** Segmentos transcritos. */
   segments: Segment[];
+  /** Estilo de subtítulo aplicado en el editor y el export. */
+  style: SubtitleStyle;
 }
 
 export const session: MediaSession = {
@@ -32,6 +35,7 @@ export const session: MediaSession = {
   sourceLang: null,
   targetLang: null,
   segments: [],
+  style: { ...defaultSubtitleStyle },
 };
 
 export function setFile(file: File, kind: MediaKind): void {
@@ -58,4 +62,5 @@ export function resetMedia(): void {
   session.sourceLang = null;
   session.targetLang = null;
   session.segments = [];
+  session.style = { ...defaultSubtitleStyle };
 }

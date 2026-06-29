@@ -17,7 +17,10 @@ export function segmentsFromAsr(output: any): Segment[] {
     return chunks
       .map((c: any, i: number) => {
         const start = c?.timestamp?.[0] ?? 0;
-        const end = c?.timestamp?.[1] ?? start;
+        // Whisper suele dar end=null en el último chunk; usa el inicio del
+        // siguiente para que el segmento tenga duración visible.
+        const next = chunks[i + 1]?.timestamp?.[0];
+        const end = c?.timestamp?.[1] ?? (typeof next === "number" ? next : start);
         return { id: `seg-${i}`, start, end, text: String(c?.text ?? "").trim() };
       })
       .filter((s: Segment) => s.text.length > 0);
