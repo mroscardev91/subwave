@@ -17,7 +17,8 @@ const accept =
   <h2 id="upload-h" data-stage-heading tabindex="-1" class="text-3xl text-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua sm:text-4xl">{u.title}</h2>
   <p class="mt-3 text-on-deep-soft">{u.lead}</p>
 
-  <label class="group mt-8 flex cursor-pointer flex-col items-center justify-center gap-4 rounded-card border-2 border-dashed border-on-deep-soft/30 bg-deep-soft px-6 py-16 text-center transition hover:border-aqua focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua">
+  <!-- Dropzone -->
+  <label data-upload="dropzone" class="dropzone group mt-8 flex cursor-pointer flex-col items-center justify-center gap-4 rounded-card border-2 border-dashed border-on-deep-soft/30 bg-deep-soft px-6 py-16 text-center transition hover:border-aqua focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua">
     <input id="file-input" type="file" accept={accept} class="sr-only" />
     <svg viewBox="0 0 64 36" class="h-12 w-28 text-aqua" aria-hidden="true">
       <path d="M4 18 C12 6 20 6 24 18 C28 30 36 30 44 18 C52 6 60 6 60 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
@@ -28,12 +29,63 @@ const accept =
     <span class="font-mono text-xs tracking-wide text-on-deep-soft">{u.formats}</span>
   </label>
 
+  <!-- Selected file: preview, progress, result -->
+  <div data-upload="selected" hidden class="mt-8 rounded-card border border-on-deep-soft/15 bg-deep-soft p-5">
+    <div class="flex items-start gap-4">
+      <video data-upload="preview-video" hidden controls muted playsinline class="h-24 w-40 shrink-0 rounded-lg bg-deep object-cover"></video>
+      <div data-upload="preview-audio" hidden class="grid h-24 w-40 shrink-0 place-items-center rounded-lg bg-deep" aria-hidden="true">
+        <svg viewBox="0 0 64 36" class="h-8 w-20 text-aqua">
+          <path d="M4 18 C12 6 20 6 24 18 C28 30 36 30 44 18 C52 6 60 6 60 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+          <path d="M4 28 C12 20 20 20 24 28 C28 34 36 34 44 28 C52 20 60 20 60 28" fill="none" stroke="#15B5A6" stroke-width="2.5" stroke-linecap="round" />
+        </svg>
+      </div>
+
+      <div class="min-w-0 flex-1">
+        <p data-upload="name" tabindex="-1" class="truncate font-medium text-on-deep focus:outline-none"></p>
+        <p data-upload="meta" class="mt-1 font-mono text-xs text-on-deep-soft"></p>
+      </div>
+
+      <button type="button" data-upload="reset" class="shrink-0 rounded-pill border border-on-deep-soft/30 px-4 py-2 text-sm font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-40">{u.chooseAnother}</button>
+    </div>
+
+    <!-- Progress -->
+    <div data-upload="progress" hidden class="mt-5">
+      <div class="flex items-center justify-between text-sm text-on-deep-soft">
+        <span data-upload="status" aria-live="polite"></span>
+        <span data-upload="pct" class="font-mono"></span>
+      </div>
+      <div data-upload="bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="mt-2 h-2 overflow-hidden rounded-pill bg-deep">
+        <div data-upload="bar" class="h-full rounded-pill bg-aqua transition-[width] duration-200" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- Ready -->
+    <p data-upload="ready" hidden role="status" class="mt-5 flex items-center gap-2 text-sm text-success">
+      <svg viewBox="0 0 16 16" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M3 8.5 6.5 12 13 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      <span data-upload="ready-text"></span>
+      <span data-upload="ready-dur" class="font-mono"></span>
+    </p>
+
+    <!-- Error -->
+    <p data-upload="error" hidden role="alert" class="mt-5 flex items-center gap-2 rounded-card border border-alert/40 bg-alert/10 px-4 py-3 text-sm text-alert">
+      <svg viewBox="0 0 16 16" class="h-4 w-4 shrink-0" aria-hidden="true"><path d="M8 1.5 15 14H1z M8 6v4 M8 11.5v.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round" /></svg>
+      <span data-upload="error-text"></span>
+    </p>
+  </div>
+
   <p class="mt-6 flex items-center gap-2 text-sm text-on-deep-soft">
     <svg viewBox="0 0 16 16" class="h-4 w-4 shrink-0 text-aqua" aria-hidden="true"><path d="M8 1 14 4v4c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /></svg>
     {u.privacy}
   </p>
 
   <div class="mt-10 flex items-center justify-end">
-    <button type="button" data-action="next" class="rounded-pill bg-aqua px-6 py-3 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep">{u.next}</button>
+    <button id="upload-continue" type="button" data-action="next" disabled class="rounded-pill bg-aqua px-6 py-3 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep disabled:cursor-not-allowed disabled:opacity-40">{u.next}</button>
   </div>
 </section>
+
+<style>
+  .dropzone.is-dragging {
+    border-color: var(--color-aqua);
+    background: color-mix(in oklab, var(--color-aqua) 8%, var(--color-deep-soft));
+  }
+</style>

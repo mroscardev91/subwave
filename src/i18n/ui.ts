@@ -27,12 +27,24 @@ export interface UIStrings {
     back: string;
     restart: string;
     privateChip: string;
-    upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; next: string };
+    upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; chooseAnother: string; next: string };
     config: { title: string; lead: string; source: string; target: string; autodetect: string; note: string; transcribe: string };
     editor: { title: string; lead: string; segments: string; preview: string; timeline: string; style: string; export: string; soon: string };
   };
   /** Strings serialized to window.__I18N__ for runtime scripts. */
-  client: Record<string, string>;
+  client: {
+    appName: string;
+    upload: {
+      loadingEngine: string;
+      extracting: string;
+      ready: string;
+      kindVideo: string;
+      kindAudio: string;
+      errorNoAudio: string;
+      errorUnsupported: string;
+      errorGeneric: string;
+    };
+  };
 }
 
 export const ui: Record<Lang, UIStrings> = {
@@ -95,6 +107,7 @@ export const ui: Record<Lang, UIStrings> = {
         browse: "Browse files",
         formats: "MP4 · MOV · WebM · MKV · MP3 · WAV · OGG",
         privacy: "Processed on your device. Nothing leaves your browser.",
+        chooseAnother: "Choose another file",
         next: "Continue",
       },
       config: {
@@ -119,6 +132,16 @@ export const ui: Record<Lang, UIStrings> = {
     },
     client: {
       appName: "Subwave",
+      upload: {
+        loadingEngine: "Loading audio engine…",
+        extracting: "Extracting audio…",
+        ready: "Audio ready",
+        kindVideo: "Video",
+        kindAudio: "Audio",
+        errorNoAudio: "That file has no audio track.",
+        errorUnsupported: "Unsupported file type.",
+        errorGeneric: "Couldn't process that file. Try another.",
+      },
     },
   },
 
@@ -181,6 +204,7 @@ export const ui: Record<Lang, UIStrings> = {
         browse: "Buscar archivo",
         formats: "MP4 · MOV · WebM · MKV · MP3 · WAV · OGG",
         privacy: "Se procesa en tu dispositivo. Nada sale de tu navegador.",
+        chooseAnother: "Elegir otro archivo",
         next: "Continuar",
       },
       config: {
@@ -205,6 +229,16 @@ export const ui: Record<Lang, UIStrings> = {
     },
     client: {
       appName: "Subwave",
+      upload: {
+        loadingEngine: "Cargando motor de audio…",
+        extracting: "Extrayendo audio…",
+        ready: "Audio listo",
+        kindVideo: "Vídeo",
+        kindAudio: "Audio",
+        errorNoAudio: "Ese archivo no tiene pista de audio.",
+        errorUnsupported: "Tipo de archivo no soportado.",
+        errorGeneric: "No se pudo procesar el archivo. Prueba con otro.",
+      },
     },
   },
 };

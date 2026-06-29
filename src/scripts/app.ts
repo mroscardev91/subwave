@@ -3,6 +3,7 @@
 // aquí solo se orquesta la transición entre ellas.
 
 import { init, enterApp, exitApp, next, back, goTo, type StageName } from "@/scripts/stageManager";
+import { initUploadStage } from "@/scripts/stages/uploadStage";
 
 function onReady(fn: () => void): void {
   if (document.readyState !== "loading") fn();
@@ -11,6 +12,7 @@ function onReady(fn: () => void): void {
 
 onReady(() => {
   init();
+  initUploadStage();
 
   document.addEventListener("click", (event) => {
     const trigger = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
