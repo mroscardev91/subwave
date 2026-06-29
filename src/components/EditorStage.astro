@@ -1,0 +1,73 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const e = ui[lang].app.editor;
+
+// Hito 2: la maqueta del editor (regiones agua profunda). Sidebar de segmentos,
+// preview, timeline y barra de estilo se rellenan con lógica real en Hito 5.
+const panelLabel = "font-mono text-xs uppercase tracking-wide text-on-deep-soft";
+---
+
+<section data-stage="editor" hidden aria-labelledby="editor-h" class="mx-auto max-w-6xl px-6 py-10 sm:py-12">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h2 id="editor-h" data-stage-heading tabindex="-1" class="text-3xl text-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua sm:text-4xl">{e.title}</h2>
+      <p class="mt-2 text-on-deep-soft">{e.lead}</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <button type="button" data-action="back" class="rounded-pill border border-on-deep-soft/30 px-5 py-2.5 font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">{ui[lang].app.back}</button>
+      <button type="button" data-action="export" disabled class="rounded-pill bg-aqua px-5 py-2.5 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep disabled:cursor-not-allowed disabled:opacity-40">{e.export}</button>
+    </div>
+  </div>
+
+  <!-- Barra de estilo (placeholder) -->
+  <div class="mt-8 rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+    <span class={panelLabel}>{e.style}</span>
+    <div class="mt-3 flex flex-wrap gap-2" aria-hidden="true">
+      <span class="h-8 w-24 rounded-pill bg-on-deep-soft/10"></span>
+      <span class="h-8 w-16 rounded-pill bg-on-deep-soft/10"></span>
+      <span class="h-8 w-16 rounded-pill bg-on-deep-soft/10"></span>
+      <span class="h-8 w-20 rounded-pill bg-on-deep-soft/10"></span>
+    </div>
+  </div>
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[20rem_1fr]">
+    <!-- Sidebar de segmentos (placeholder) -->
+    <div class="rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+      <span class={panelLabel}>{e.segments}</span>
+      <ul class="mt-3 space-y-2" aria-hidden="true">
+        {Array.from({ length: 5 }).map(() => (
+          <li class="rounded-lg bg-on-deep-soft/8 px-3 py-3">
+            <span class="block h-2.5 w-16 rounded bg-aqua/30"></span>
+            <span class="mt-2 block h-2.5 w-full rounded bg-on-deep-soft/15"></span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <div class="space-y-6">
+      <!-- Preview (placeholder) -->
+      <div class="grid aspect-video place-items-center rounded-card border border-on-deep-soft/15 bg-deep-soft">
+        <span class={panelLabel}>{e.preview}</span>
+      </div>
+
+      <!-- Timeline (placeholder) -->
+      <div class="rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+        <span class={panelLabel}>{e.timeline}</span>
+        <div class="mt-3 flex items-center gap-1.5" aria-hidden="true">
+          {Array.from({ length: 28 }).map((_, i) => (
+            <span class="w-full rounded-full bg-aqua/25" style={`height:${8 + (i % 7) * 5}px`}></span>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="mt-8 text-center font-mono text-xs text-on-deep-soft">{e.soon}</p>
+</section>

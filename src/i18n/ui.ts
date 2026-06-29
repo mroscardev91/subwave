@@ -22,6 +22,15 @@ export interface UIStrings {
   footer: { tagline: string; note: string; rights: string };
   navLabel: string;
   langLabel: string;
+  app: {
+    steps: { upload: string; config: string; editor: string };
+    back: string;
+    restart: string;
+    privateChip: string;
+    upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; next: string };
+    config: { title: string; lead: string; source: string; target: string; autodetect: string; note: string; transcribe: string };
+    editor: { title: string; lead: string; segments: string; preview: string; timeline: string; style: string; export: string; soon: string };
+  };
   /** Strings serialized to window.__I18N__ for runtime scripts. */
   client: Record<string, string>;
 }
@@ -74,6 +83,40 @@ export const ui: Record<Lang, UIStrings> = {
     },
     navLabel: "Primary",
     langLabel: "Language",
+    app: {
+      steps: { upload: "Upload", config: "Configure", editor: "Edit" },
+      back: "Back",
+      restart: "Start over",
+      privateChip: "Private · on-device",
+      upload: {
+        title: "Add your media",
+        lead: "Drop a video or audio file. It's read locally — nothing is uploaded.",
+        cta: "Drop your file here",
+        browse: "Browse files",
+        formats: "MP4 · MOV · WebM · MKV · MP3 · WAV · OGG",
+        privacy: "Processed on your device. Nothing leaves your browser.",
+        next: "Continue",
+      },
+      config: {
+        title: "Set your languages",
+        lead: "Pick the spoken language and the subtitle language. If they differ, Subwave translates with NLLB.",
+        source: "Spoken language",
+        target: "Subtitle language",
+        autodetect: "Auto-detect",
+        note: "Same language = transcription only. Different = transcription + translation.",
+        transcribe: "Transcribe",
+      },
+      editor: {
+        title: "Edit your subtitles",
+        lead: "Tweak text and timings on the timeline. Style and export when you're ready.",
+        segments: "Segments",
+        preview: "Preview",
+        timeline: "Timeline",
+        style: "Subtitle style",
+        export: "Export",
+        soon: "Comes together in the next steps.",
+      },
+    },
     client: {
       appName: "Subwave",
     },
@@ -126,6 +169,40 @@ export const ui: Record<Lang, UIStrings> = {
     },
     navLabel: "Principal",
     langLabel: "Idioma",
+    app: {
+      steps: { upload: "Subir", config: "Configurar", editor: "Editar" },
+      back: "Atrás",
+      restart: "Empezar de nuevo",
+      privateChip: "Privado · en tu equipo",
+      upload: {
+        title: "Añade tu archivo",
+        lead: "Suelta un vídeo o audio. Se lee en local: no se sube nada.",
+        cta: "Suelta tu archivo aquí",
+        browse: "Buscar archivo",
+        formats: "MP4 · MOV · WebM · MKV · MP3 · WAV · OGG",
+        privacy: "Se procesa en tu dispositivo. Nada sale de tu navegador.",
+        next: "Continuar",
+      },
+      config: {
+        title: "Elige los idiomas",
+        lead: "Indica el idioma hablado y el de los subtítulos. Si difieren, Subwave traduce con NLLB.",
+        source: "Idioma hablado",
+        target: "Idioma de subtítulos",
+        autodetect: "Autodetectar",
+        note: "Mismo idioma = solo transcripción. Distinto = transcripción + traducción.",
+        transcribe: "Transcribir",
+      },
+      editor: {
+        title: "Edita tus subtítulos",
+        lead: "Ajusta texto y tiempos en la timeline. Aplica estilo y exporta cuando quieras.",
+        segments: "Segmentos",
+        preview: "Vista previa",
+        timeline: "Línea de tiempo",
+        style: "Estilo de subtítulo",
+        export: "Exportar",
+        soon: "Se completa en los siguientes pasos.",
+      },
+    },
     client: {
       appName: "Subwave",
     },

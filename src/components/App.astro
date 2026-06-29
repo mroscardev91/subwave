@@ -1,0 +1,94 @@
+---
+import UploadStage from "@/components/UploadStage.astro";
+import ConfigStage from "@/components/ConfigStage.astro";
+import EditorStage from "@/components/EditorStage.astro";
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const a = ui[lang].app;
+const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
+  { key: "upload", label: a.steps.upload },
+  { key: "config", label: a.steps.config },
+  { key: "editor", label: a.steps.editor },
+];
+---
+
+<div id="app" hidden class="min-h-screen bg-deep text-on-deep">
+  <header class="sticky top-0 z-10 border-b border-on-deep-soft/15 bg-deep/85 backdrop-blur">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
+      <button type="button" data-action="home" aria-label="Subwave" class="flex items-center gap-2.5 rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
+        <svg viewBox="0 0 64 64" class="h-8 w-8" aria-hidden="true">
+          <rect width="64" height="64" rx="15" fill="#0E141B" />
+          <path d="M13 30 C20 20 27 20 31 30 C35 40 44 40 51 30" fill="none" stroke="#2DE0CE" stroke-width="5" stroke-linecap="round" />
+          <path d="M13 41 C20 34 27 34 31 41 C35 48 44 48 51 41" fill="none" stroke="#15B5A6" stroke-width="3.5" stroke-linecap="round" />
+        </svg>
+        <span class="font-sans text-lg font-semibold tracking-tight text-on-deep">Subwave</span>
+      </button>
+
+      <nav aria-label={a.steps.upload + " · " + a.steps.config + " · " + a.steps.editor}>
+        <ol class="stepper">
+          {steps.map((s, i) => (
+            <li class:list={["step", { "is-active": i === 0 }]} data-step={s.key}>
+              <span class="num" aria-hidden="true">{i + 1}</span>
+              <span class="label">{s.label}</span>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div class="flex items-center gap-3">
+        <span class="hidden items-center gap-1.5 font-mono text-xs text-on-deep-soft sm:inline-flex">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-aqua" aria-hidden="true"></span>
+          {a.privateChip}
+        </span>
+        <button type="button" data-action="home" class="rounded-pill border border-on-deep-soft/30 px-4 py-2 text-sm font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">{a.restart}</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <UploadStage lang={lang} />
+    <ConfigStage lang={lang} />
+    <EditorStage lang={lang} />
+  </main>
+</div>
+
+<script>
+  import "@/scripts/app.ts";
+</script>
+
+<style>
+  .stepper { display: flex; align-items: center; gap: 0.5rem; }
+  .step { display: flex; align-items: center; gap: 0.5rem; color: var(--color-on-deep-soft); }
+  .step + .step { margin-left: 0.25rem; }
+  .step .num {
+    display: grid; place-items: center;
+    width: 1.75rem; height: 1.75rem;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--color-on-deep-soft) 18%, transparent);
+    color: var(--color-on-deep-soft);
+    font: 500 0.8rem/1 var(--font-mono);
+  }
+  .step .label { font: 500 0.85rem/1 var(--font-sans); }
+  .step.is-active { color: var(--color-on-deep); }
+  .step.is-active .num { background: var(--color-aqua); color: var(--color-deep); }
+  .step.is-done .num { background: var(--color-aqua-deep); color: var(--color-deep); }
+  /* Mobile: hide the label visually but keep it in the a11y tree so the
+     aria-current step still has an accessible name. */
+  @media (max-width: 640px) {
+    .step .label {
+      position: absolute;
+      width: 1px; height: 1px;
+      margin: -1px; padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  }
+</style>

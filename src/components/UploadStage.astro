@@ -1,0 +1,39 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const u = ui[lang].app.upload;
+
+const accept =
+  "video/mp4,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/wav,audio/ogg,.mp4,.mov,.webm,.mkv,.mp3,.wav,.ogg";
+---
+
+<section data-stage="upload" hidden aria-labelledby="upload-h" class="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+  <h2 id="upload-h" data-stage-heading tabindex="-1" class="text-3xl text-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua sm:text-4xl">{u.title}</h2>
+  <p class="mt-3 text-on-deep-soft">{u.lead}</p>
+
+  <label class="group mt-8 flex cursor-pointer flex-col items-center justify-center gap-4 rounded-card border-2 border-dashed border-on-deep-soft/30 bg-deep-soft px-6 py-16 text-center transition hover:border-aqua focus-within:border-aqua focus-within:ring-2 focus-within:ring-aqua">
+    <input id="file-input" type="file" accept={accept} class="sr-only" />
+    <svg viewBox="0 0 64 36" class="h-12 w-28 text-aqua" aria-hidden="true">
+      <path d="M4 18 C12 6 20 6 24 18 C28 30 36 30 44 18 C52 6 60 6 60 18" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" />
+      <path d="M4 28 C12 20 20 20 24 28 C28 34 36 34 44 28 C52 20 60 20 60 28" fill="none" stroke="#15B5A6" stroke-width="2.5" stroke-linecap="round" />
+    </svg>
+    <span class="text-lg text-on-deep">{u.cta}</span>
+    <span class="rounded-pill bg-aqua px-5 py-2 font-medium text-deep transition group-hover:bg-aqua-deep">{u.browse}</span>
+    <span class="font-mono text-xs tracking-wide text-on-deep-soft">{u.formats}</span>
+  </label>
+
+  <p class="mt-6 flex items-center gap-2 text-sm text-on-deep-soft">
+    <svg viewBox="0 0 16 16" class="h-4 w-4 shrink-0 text-aqua" aria-hidden="true"><path d="M8 1 14 4v4c0 3.5-2.5 6-6 7-3.5-1-6-3.5-6-7V4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /></svg>
+    {u.privacy}
+  </p>
+
+  <div class="mt-10 flex items-center justify-end">
+    <button type="button" data-action="next" class="rounded-pill bg-aqua px-6 py-3 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep">{u.next}</button>
+  </div>
+</section>
