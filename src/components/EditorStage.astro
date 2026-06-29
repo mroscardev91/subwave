@@ -11,43 +11,67 @@ interface Props {
 
 const { lang } = Astro.props;
 const e = ui[lang].app.editor;
-const iconBtn =
-  "rounded-pill border border-on-deep-soft/30 px-4 py-2.5 text-sm font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-40";
+const toolBtn =
+  "inline-flex h-9 w-9 items-center justify-center rounded-lg border border-on-deep-soft/25 text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-40";
 ---
 
-<section data-stage="editor" hidden aria-labelledby="editor-h" class="mx-auto max-w-6xl px-6 py-10 sm:py-12">
-  <div class="flex flex-wrap items-end justify-between gap-4">
-    <div>
-      <h2 id="editor-h" data-stage-heading tabindex="-1" class="text-3xl text-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua sm:text-4xl">{e.title}</h2>
-      <p class="mt-2 text-on-deep-soft">{e.lead}</p>
+<section data-stage="editor" hidden aria-labelledby="editor-h" class="flex h-[100dvh] flex-col overflow-hidden">
+  <h2 id="editor-h" data-stage-heading tabindex="-1" class="sr-only">{e.title}</h2>
+
+  <!-- Toolbar -->
+  <header class="flex items-center justify-between gap-4 border-b border-on-deep-soft/15 px-5 py-3">
+    <div class="flex min-w-0 items-center gap-2">
+      <button type="button" data-action="back" class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm text-on-deep transition hover:bg-on-deep-soft/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        {ui[lang].app.back}
+      </button>
+      <span class="mx-1 h-5 w-px bg-on-deep-soft/20" aria-hidden="true"></span>
+      <button type="button" data-editor="undo" disabled aria-label={e.undo} class={toolBtn}>
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M6 4 3 7l3 3 M3 7h7a3.5 3.5 0 0 1 0 7H7" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <button type="button" data-editor="redo" disabled aria-label={e.redo} class={toolBtn}>
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M10 4l3 3-3 3 M13 7H6a3.5 3.5 0 0 0 0 7h3" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      </button>
+      <span class="mx-1 hidden h-5 w-px bg-on-deep-soft/20 sm:block" aria-hidden="true"></span>
+      <span data-editor="filename" class="hidden max-w-[16rem] truncate font-mono text-xs text-on-deep-soft sm:block"></span>
     </div>
-    <div class="flex items-center gap-2">
-      <button type="button" data-action="back" class={iconBtn}>{ui[lang].app.back}</button>
-      <button type="button" data-editor="undo" disabled class={iconBtn}>{e.undo}</button>
-      <button type="button" data-editor="redo" disabled class={iconBtn}>{e.redo}</button>
-      <button type="button" data-action="export" disabled class="rounded-pill bg-aqua px-5 py-2.5 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep disabled:cursor-not-allowed disabled:opacity-40">{e.export}</button>
-    </div>
-  </div>
 
-  <div class="mt-8">
-    <SubtitleStyleBar lang={lang} />
-  </div>
+    <button type="button" data-action="export" disabled class="inline-flex items-center gap-2 rounded-pill bg-aqua px-5 py-2.5 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep disabled:cursor-not-allowed disabled:opacity-40">
+      <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+      {e.export}
+    </button>
+  </header>
 
-  <div class="mt-6 grid gap-6 lg:grid-cols-[22rem_1fr]">
-    <EditorSidebar lang={lang} />
-
-    <div class="space-y-6">
-      <!-- Preview con overlay del subtítulo activo -->
-      <div data-editor="preview" class="relative grid aspect-video place-items-center overflow-hidden rounded-card border border-on-deep-soft/15 bg-deep">
-        <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.preview}</span>
-        <video data-editor="video" hidden playsinline controls class="absolute inset-0 h-full w-full bg-black object-contain"></video>
-        <div data-editor="overlay" aria-hidden="true" class="pointer-events-none absolute inset-0 flex justify-center p-5" style="align-items:flex-end">
-          <span data-editor="bubble" class="max-w-[92%] rounded text-center leading-tight"></span>
+  <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <!-- Main: preview + playbar + presets -->
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div data-editor="preview" class="relative grid min-h-[42vh] flex-1 cursor-pointer place-items-center bg-deep p-4">
+        <span data-editor="preview-hint" class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.preview}</span>
+        <video data-editor="video" hidden playsinline class="absolute inset-0 h-full w-full object-contain"></video>
+        <audio data-editor="audio" hidden></audio>
+        <div data-editor="overlay" aria-hidden="true" class="pointer-events-none absolute inset-0 flex justify-center p-6" style="align-items:flex-end">
+          <span data-editor="bubble" class="max-w-[90%] rounded text-center leading-tight"></span>
         </div>
       </div>
-      <audio data-editor="audio" hidden controls class="w-full"></audio>
 
-      <Timeline lang={lang} />
+      <div class="flex items-center gap-3 border-t border-on-deep-soft/15 px-6 py-2.5">
+        <button type="button" data-editor="play" class="inline-flex h-9 w-9 items-center justify-center rounded-pill bg-aqua text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep">
+          <svg data-icon="play" viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M4 3l9 5-9 5z" fill="currentColor" /></svg>
+          <svg data-icon="pause" viewBox="0 0 16 16" hidden class="h-4 w-4" aria-hidden="true"><path d="M5 3h2v10H5zM9 3h2v10H9z" fill="currentColor" /></svg>
+        </button>
+        <span data-editor="time" class="font-mono text-xs tabular-nums text-on-deep-soft">0:00 / 0:00</span>
+      </div>
+
+      <div class="border-t border-on-deep-soft/15 px-6 py-3">
+        <SubtitleStyleBar lang={lang} />
+      </div>
+    </div>
+
+    <!-- Right: subtitle cards -->
+    <div class="min-h-0 lg:w-[24rem] lg:shrink-0">
+      <EditorSidebar lang={lang} />
     </div>
   </div>
+
+  <Timeline lang={lang} />
 </section>

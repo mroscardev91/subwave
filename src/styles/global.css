@@ -64,13 +64,19 @@
   position: absolute;
   top: 0.4rem;
   bottom: 0.4rem;
+  overflow: hidden;
+  padding: 0.3rem 0.4rem;
   border-radius: 6px;
-  background: color-mix(in oklab, var(--color-aqua) 28%, transparent);
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.2;
+  color: var(--color-on-deep);
+  background: color-mix(in oklab, var(--color-aqua) 24%, var(--color-deep-soft));
   border: 1px solid color-mix(in oklab, var(--color-aqua) 45%, transparent);
   transition: background 0.15s;
 }
-.timeline-block:hover { background: color-mix(in oklab, var(--color-aqua) 42%, transparent); }
-.timeline-block.is-active { background: color-mix(in oklab, var(--color-aqua) 60%, transparent); }
+.timeline-block:hover { background: color-mix(in oklab, var(--color-aqua) 38%, var(--color-deep-soft)); }
+.timeline-block.is-active { background: color-mix(in oklab, var(--color-aqua) 72%, var(--color-deep-soft)); color: var(--color-deep); }
 .timeline-block.is-selected { border-color: var(--color-aqua); box-shadow: 0 0 0 1px var(--color-aqua); }
 .timeline-block:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
 

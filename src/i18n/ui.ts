@@ -39,6 +39,19 @@ export interface UIStrings {
       export: string;
       undo: string;
       redo: string;
+      tracks: string;
+      addLanguage: string;
+      addLine: string;
+      customize: string;
+      presets: {
+        base: string;
+        clean: string;
+        bold: string;
+        pop: string;
+        neon: string;
+        classic: string;
+        terminal: string;
+      };
       styleBar: {
         font: string;
         size: string;
@@ -80,6 +93,12 @@ export interface UIStrings {
       segStart: string;
       segEnd: string;
       segText: string;
+      play: string;
+      delete: string;
+      line: string;
+      lines: string;
+      mediaPlay: string;
+      mediaPause: string;
     };
   };
 }
@@ -166,6 +185,19 @@ export const ui: Record<Lang, UIStrings> = {
         export: "Export",
         undo: "Undo",
         redo: "Redo",
+        tracks: "Subtitles",
+        addLanguage: "Add language",
+        addLine: "Add line",
+        customize: "Customize",
+        presets: {
+          base: "Base",
+          clean: "Clean",
+          bold: "Bold",
+          pop: "Pop",
+          neon: "Neon",
+          classic: "Classic",
+          terminal: "Terminal",
+        },
         styleBar: {
           font: "Font",
           size: "Size",
@@ -202,10 +234,16 @@ export const ui: Record<Lang, UIStrings> = {
         errorGeneric: "Transcription failed. Please try again.",
       },
       editor: {
-        empty: "No speech was detected in this file.",
+        empty: "No subtitle lines yet. Add one to start.",
         segStart: "Start",
         segEnd: "End",
         segText: "Subtitle text",
+        play: "Play from here",
+        delete: "Delete line",
+        line: "line",
+        lines: "lines",
+        mediaPlay: "Play",
+        mediaPause: "Pause",
       },
     },
   },
@@ -291,6 +329,19 @@ export const ui: Record<Lang, UIStrings> = {
         export: "Exportar",
         undo: "Deshacer",
         redo: "Rehacer",
+        tracks: "Subtítulos",
+        addLanguage: "Añadir idioma",
+        addLine: "Añadir línea",
+        customize: "Personalizar",
+        presets: {
+          base: "Base",
+          clean: "Limpio",
+          bold: "Negrita",
+          pop: "Pop",
+          neon: "Neón",
+          classic: "Clásico",
+          terminal: "Terminal",
+        },
         styleBar: {
           font: "Fuente",
           size: "Tamaño",
@@ -327,10 +378,16 @@ export const ui: Record<Lang, UIStrings> = {
         errorGeneric: "La transcripción falló. Inténtalo de nuevo.",
       },
       editor: {
-        empty: "No se detectó voz en este archivo.",
+        empty: "Aún no hay líneas. Añade una para empezar.",
         segStart: "Inicio",
         segEnd: "Fin",
         segText: "Texto del subtítulo",
+        play: "Reproducir desde aquí",
+        delete: "Eliminar línea",
+        line: "línea",
+        lines: "líneas",
+        mediaPlay: "Reproducir",
+        mediaPause: "Pausar",
       },
     },
   },

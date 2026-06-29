@@ -1,12 +1,14 @@
-// Editor: preview con overlay del subtítulo activo, lista de segmentos editable
-// (texto + tiempos), timeline con scrubbing/playhead, undo/redo y estilo en vivo.
+// Editor (layout estilo subvid): preview centrado con overlay del subtítulo
+// activo, barra de reproducción propia, panel de tarjetas a la derecha
+// (play + tiempos + texto + borrar + añadir línea), presets de estilo y timeline
+// con el texto en los bloques. Undo/redo y estilo en vivo.
 
 import { session } from "@/scripts/session";
-import { formatTimecode } from "@/scripts/subtitles";
+import { formatTimecode, formatTimecodeFull, parseTimecode } from "@/scripts/subtitles";
 import * as segs from "@/scripts/editorSegments";
 import * as history from "@/scripts/editorHistory";
 import * as timeline from "@/scripts/timeline";
-import { applyBubbleStyle, positionToAlign, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
+import { applyBubbleStyle, positionToAlign, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
 
 let stage: HTMLElement;
 let video: HTMLVideoElement;
@@ -14,13 +16,18 @@ let audio: HTMLAudioElement;
 let media: HTMLMediaElement | null = null;
 let overlay: HTMLElement;
 let bubble: HTMLElement;
+let previewHint: HTMLElement;
 let listEl: HTMLElement;
 let emptyEl: HTMLElement;
+let countEl: HTMLElement;
 let undoBtn: HTMLButtonElement;
 let redoBtn: HTMLButtonElement;
+let playBtn: HTMLButtonElement;
+let timeEl: HTMLElement;
+let filenameEl: HTMLElement;
+let customPanel: HTMLElement;
 let wired = false;
 let activeId: string | null = null;
-let textDirty = false;
 
 function q<T extends HTMLElement>(sel: string): T {
   return stage.querySelector<T>(sel)!;
@@ -36,25 +43,51 @@ export function initEditorStage(): void {
   audio = q('[data-editor="audio"]');
   overlay = q('[data-editor="overlay"]');
   bubble = q('[data-editor="bubble"]');
+  previewHint = q('[data-editor="preview-hint"]');
   listEl = q('[data-editor="segments"]');
   emptyEl = q('[data-editor="empty"]');
+  countEl = q('[data-editor="count"]');
   undoBtn = q('[data-editor="undo"]');
   redoBtn = q('[data-editor="redo"]');
+  playBtn = q('[data-editor="play"]');
+  timeEl = q('[data-editor="time"]');
+  filenameEl = q('[data-editor="filename"]');
+  customPanel = q('[data-editor="custom"]');
 
   timeline.initTimeline({
     track: q('[data-editor="timeline-track"]'),
     blocks: q('[data-editor="timeline-blocks"]'),
     playhead: q('[data-editor="timeline-playhead"]'),
+    ruler: q('[data-editor="timeline-ruler"]'),
     onSeek: seek,
   });
 
   undoBtn.addEventListener("click", doUndo);
   redoBtn.addEventListener("click", doRedo);
+  playBtn.addEventListener("click", togglePlay);
+  q('[data-editor="preview"]').addEventListener("click", (e) => {
+    if (e.target === playBtn || playBtn.contains(e.target as Node)) return;
+    togglePlay();
+  });
+  q('[data-editor="add-line"]').addEventListener("click", () => {
+    const id = segs.addSegment();
+    renderList();
+    timeline.renderBlocks();
+    const li = listEl.querySelector<HTMLElement>(`.seg-row[data-seg-id="${id}"]`);
+    li?.scrollIntoView({ block: "nearest" });
+    li?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+  });
+  q('[data-editor="customize-toggle"]').addEventListener("click", (e) => {
+    const btn = e.currentTarget as HTMLElement;
+    const open = customPanel.hidden;
+    customPanel.hidden = !open;
+    btn.setAttribute("aria-expanded", String(open));
+  });
 
   document.addEventListener("keydown", (event) => {
     if (stage.hidden) return;
     const editing = document.activeElement instanceof HTMLTextAreaElement || document.activeElement instanceof HTMLInputElement;
-    if (editing) return; // deja el undo nativo del campo de texto
+    if (editing) return;
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
     event.preventDefault();
     if (event.shiftKey) doRedo();
@@ -63,28 +96,40 @@ export function initEditorStage(): void {
 
   for (const m of [video, audio]) {
     m.addEventListener("timeupdate", () => onTimeUpdate(m));
+    m.addEventListener("play", updatePlayIcon);
+    m.addEventListener("pause", updatePlayIcon);
+    m.addEventListener("loadedmetadata", () => onLoadedMeta(m));
   }
 
   wireStyleControls();
+  wirePresets();
   segs.onChange(onSegmentsChange);
   history.onChange(updateUndoRedo);
 
   wired = true;
 }
 
-/** Llamado al entrar en el editor con una transcripción nueva. */
 export function enterEditor(): void {
   initEditorStage();
   segs.init();
   mountMedia();
-  applyStyleToControls();
   applyStyle();
+  applyStyleToControls();
   renderList();
+  timeline.renderRuler();
   timeline.renderBlocks();
   timeline.setPlayhead(0);
   activeId = null;
   updateOverlay();
   updateUndoRedo();
+  updateTime();
+  updatePlayIcon();
+  if (session.file) filenameEl.textContent = `${session.file.name} · ${fmtSize(session.file.size)}`;
+}
+
+function fmtSize(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
 
 function mountMedia(): void {
@@ -95,29 +140,67 @@ function mountMedia(): void {
     video.src = url;
     video.hidden = false;
     audio.hidden = true;
+    previewHint.hidden = true;
     media = video;
   } else if (url) {
     audio.src = url;
-    audio.hidden = false;
+    audio.hidden = true;
     video.hidden = true;
+    previewHint.hidden = false;
     media = audio;
   } else {
     media = null;
     video.hidden = true;
     audio.hidden = true;
+    previewHint.hidden = false;
   }
+}
+
+// ---- reproducción ----
+
+function togglePlay(): void {
+  if (!media) return;
+  if (media.paused) void media.play();
+  else media.pause();
+}
+
+function updatePlayIcon(): void {
+  const playing = !!media && !media.paused;
+  playBtn.querySelector<HTMLElement>('[data-icon="play"]')!.hidden = playing;
+  playBtn.querySelector<HTMLElement>('[data-icon="pause"]')!.hidden = !playing;
+  const t = window.__I18N__.editor;
+  playBtn.setAttribute("aria-label", playing ? t.mediaPause : t.mediaPlay);
+}
+
+function updateTime(): void {
+  const cur = media?.currentTime ?? 0;
+  timeEl.textContent = `${formatTimecode(cur)} / ${formatTimecode(session.duration)}`;
+}
+
+// La duración real del medio manda: sincroniza session.duration para que la
+// regla, el playhead y el tiempo usen una sola fuente.
+function onLoadedMeta(m: HTMLMediaElement): void {
+  if (m === media && Number.isFinite(m.duration) && m.duration > 0) {
+    session.duration = m.duration;
+    timeline.renderRuler();
+    timeline.renderBlocks();
+    timeline.setPlayhead(m.currentTime);
+  }
+  updateTime();
 }
 
 function seek(time: number): void {
   if (media) media.currentTime = time;
   timeline.setPlayhead(time);
   refreshActive(time);
+  updateTime();
 }
 
 function onTimeUpdate(m: HTMLMediaElement): void {
   if (m !== media) return;
   timeline.setPlayhead(m.currentTime);
   refreshActive(m.currentTime);
+  updateTime();
 }
 
 function refreshActive(time: number): void {
@@ -127,6 +210,8 @@ function refreshActive(time: number): void {
     activeId = id;
     timeline.highlightActive(id);
     updateRowStates();
+    // Sigue la reproducción: trae la tarjeta activa a la vista (suave).
+    if (id) listEl.querySelector<HTMLElement>(`.seg-row[data-seg-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
   }
   setBubble(active?.text ?? "");
 }
@@ -177,6 +262,34 @@ function wireStyleControls(): void {
   });
 }
 
+function wirePresets(): void {
+  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
+    chip.addEventListener("click", () => {
+      const preset = stylePresets.find((p) => p.id === chip.dataset.preset);
+      if (!preset) return;
+      session.style = { ...preset.style };
+      applyStyle();
+      applyStyleToControls();
+    });
+  }
+}
+
+function activePresetId(): string | null {
+  const s = session.style;
+  const match = stylePresets.find(
+    (p) =>
+      p.style.font === s.font &&
+      p.style.weight === s.weight &&
+      p.style.size === s.size &&
+      p.style.color.toLowerCase() === s.color.toLowerCase() &&
+      p.style.bg.toLowerCase() === s.bg.toLowerCase() &&
+      p.style.bgOpacity === s.bgOpacity &&
+      p.style.outline === s.outline &&
+      p.style.position === s.position,
+  );
+  return match?.id ?? null;
+}
+
 function applyStyleToControls(): void {
   const s = session.style;
   styleEl<HTMLSelectElement>("font").value = s.font;
@@ -186,109 +299,158 @@ function applyStyleToControls(): void {
   styleEl<HTMLInputElement>("bgOpacity").value = String(Math.round(s.bgOpacity * 100));
   styleEl<HTMLInputElement>("outline").checked = s.outline;
   styleEl<HTMLSelectElement>("position").value = s.position;
+  const active = activePresetId();
+  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
+    const on = chip.dataset.preset === active;
+    chip.classList.toggle("is-active", on);
+    chip.setAttribute("aria-pressed", String(on));
+  }
 }
 
 function applyStyle(): void {
   applyBubbleStyle(bubble, session.style);
   overlay.style.alignItems = positionToAlign(session.style.position);
+  // refleja el preset activo en los chips sin re-set de los controles finos
+  const active = activePresetId();
+  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
+    const on = chip.dataset.preset === active;
+    chip.classList.toggle("is-active", on);
+    chip.setAttribute("aria-pressed", String(on));
+  }
 }
 
-// ---- lista de segmentos (editable) ----
+// ---- tarjetas de segmento ----
 
 function renderList(): void {
+  const t = window.__I18N__.editor;
   if (session.segments.length === 0) {
     listEl.replaceChildren();
-    emptyEl.textContent = window.__I18N__.editor.empty;
+    emptyEl.textContent = t.empty;
     emptyEl.hidden = false;
+    countEl.textContent = linesLabel(0);
     return;
   }
   emptyEl.hidden = true;
-  const t = window.__I18N__.editor;
   const selected = segs.getSelectedId();
   listEl.replaceChildren();
 
   for (const s of session.segments) {
     const li = document.createElement("li");
     li.dataset.segId = s.id;
-    li.className = `seg-row rounded-lg border border-transparent bg-on-deep-soft/10 p-2.5${s.id === selected ? " is-selected" : ""}`;
+    li.className = `seg-row rounded-lg border border-transparent bg-deep p-2.5${s.id === selected ? " is-selected" : ""}`;
 
-    const row = document.createElement("div");
-    row.className = "flex items-center justify-between gap-2";
+    const head = document.createElement("div");
+    head.className = "flex items-center gap-1.5";
 
-    const seek = document.createElement("button");
-    seek.type = "button";
-    seek.dataset.segSeek = "";
-    seek.className = "rounded px-1 font-mono text-xs text-aqua focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua";
-    seek.textContent = formatTimecode(s.start);
-    seek.addEventListener("click", () => {
+    const play = iconButton(playIcon(), t.play);
+    play.addEventListener("click", () => {
       segs.select(s.id);
-      seekTo(s.start);
+      seek(s.start);
+      void media?.play();
     });
 
-    const times = document.createElement("div");
-    times.className = "flex items-center gap-1";
-    const startIn = numberInput(s.start, t.segStart, "start");
-    const endIn = numberInput(s.end, t.segEnd, "end");
-    startIn.addEventListener("focus", () => segs.select(s.id));
-    endIn.addEventListener("focus", () => segs.select(s.id));
+    const startIn = tcInput(s.start, t.segStart, "start");
+    const arrow = document.createElement("span");
+    arrow.className = "text-on-deep-soft";
+    arrow.textContent = "→";
+    const endIn = tcInput(s.end, t.segEnd, "end");
+
     const commitTiming = () => {
-      // Campo vacío / no numérico → restaura, no apliques 0.
-      if (startIn.value === "" || endIn.value === "" || !Number.isFinite(startIn.valueAsNumber) || !Number.isFinite(endIn.valueAsNumber)) {
+      const a = parseTimecode(startIn.value);
+      const b = parseTimecode(endIn.value);
+      if (a === null || b === null) {
         syncTimingInputs(s.id, startIn, endIn);
         return;
       }
-      segs.updateTiming(s.id, startIn.valueAsNumber, endIn.valueAsNumber);
+      segs.updateTiming(s.id, a, b);
     };
+    startIn.addEventListener("focus", () => segs.select(s.id));
+    endIn.addEventListener("focus", () => segs.select(s.id));
     startIn.addEventListener("change", commitTiming);
     endIn.addEventListener("change", commitTiming);
-    times.append(startIn, endIn);
 
-    row.append(seek, times);
+    const del = iconButton(closeIcon(), t.delete);
+    del.classList.add("ml-auto");
+    del.addEventListener("click", () => {
+      segs.removeSegment(s.id);
+      renderList();
+      timeline.renderBlocks();
+      focusSelectedCard();
+    });
+
+    head.append(play, startIn, arrow, endIn, del);
 
     const text = document.createElement("textarea");
     text.dataset.segText = "";
     text.rows = 2;
     text.value = s.text;
-    text.setAttribute("aria-label", window.__I18N__.editor.segText);
-    text.className = "mt-2 w-full resize-none rounded-lg border border-on-deep-soft/20 bg-deep px-2.5 py-1.5 text-sm text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
+    text.setAttribute("aria-label", t.segText);
+    text.className = "mt-2 w-full resize-none rounded-lg border border-on-deep-soft/20 bg-deep-soft px-2.5 py-1.5 text-sm text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
+    let dirty = false;
     text.addEventListener("focus", () => segs.select(s.id));
     text.addEventListener("input", () => {
       segs.setText(s.id, text.value);
-      textDirty = true;
+      timeline.updateBlockText(s.id, text.value); // parcheo en vivo, sin reconstruir
+      updateOverlay();
+      dirty = true;
     });
     text.addEventListener("change", () => {
-      if (textDirty) {
+      if (dirty) {
         segs.commit();
-        textDirty = false;
+        dirty = false;
       }
     });
 
-    li.append(row, text);
+    li.append(head, text);
     listEl.appendChild(li);
   }
+
+  countEl.textContent = linesLabel(session.segments.length);
   updateRowStates();
 }
 
-function numberInput(value: number, label: string, field: "start" | "end"): HTMLInputElement {
+function iconButton(svg: string, label: string): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.setAttribute("aria-label", label);
+  b.title = label;
+  b.className = "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded text-on-deep-soft transition hover:bg-on-deep-soft/15 hover:text-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua";
+  b.innerHTML = svg;
+  return b;
+}
+function playIcon(): string {
+  return '<svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true"><path d="M4 3l9 5-9 5z" fill="currentColor"/></svg>';
+}
+function closeIcon(): string {
+  return '<svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+}
+
+function tcInput(value: number, label: string, field: "start" | "end"): HTMLInputElement {
   const input = document.createElement("input");
-  input.type = "number";
-  input.min = "0";
-  input.step = "0.1";
-  input.value = String(value);
+  input.type = "text";
+  input.inputMode = "decimal";
+  input.value = formatTimecodeFull(value);
   input.dataset.segField = field;
   input.setAttribute("aria-label", label);
-  input.className = "w-16 rounded-lg border border-on-deep-soft/20 bg-deep px-2 py-1 font-mono text-xs text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
+  input.className = "w-[4.5rem] rounded border border-on-deep-soft/20 bg-deep-soft px-1.5 py-1 text-center font-mono text-xs tabular-nums text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
   return input;
+}
+
+function focusSelectedCard(): void {
+  const id = segs.getSelectedId();
+  const li = id ? listEl.querySelector<HTMLElement>(`.seg-row[data-seg-id="${id}"]`) : null;
+  const btn = li?.querySelector<HTMLButtonElement>("button");
+  if (btn) btn.focus();
+  else stage.querySelector<HTMLButtonElement>('[data-editor="add-line"]')?.focus();
 }
 
 function syncTimingInputs(id: string, startIn: HTMLInputElement, endIn: HTMLInputElement): void {
   const seg = session.segments.find((s) => s.id === id);
   if (!seg) return;
-  startIn.value = String(seg.start);
-  endIn.value = String(seg.end);
+  startIn.value = formatTimecodeFull(seg.start);
+  endIn.value = formatTimecodeFull(seg.end);
 }
 
-/** Refresca selección/activo y los chips de tiempo sin reconstruir (preserva foco). */
 function updateRowStates(): void {
   const selected = segs.getSelectedId();
   for (const li of listEl.querySelectorAll<HTMLElement>(".seg-row")) {
@@ -297,19 +459,22 @@ function updateRowStates(): void {
     li.classList.toggle("is-active", id === activeId);
     const seg = session.segments.find((s) => s.id === id);
     if (!seg) continue;
-    const chip = li.querySelector<HTMLElement>("[data-seg-seek]");
-    if (chip) chip.textContent = formatTimecode(seg.start);
-    // Resincroniza los inputs con el modelo (refleja el clamp), sin tocar el foco.
     for (const input of li.querySelectorAll<HTMLInputElement>("[data-seg-field]")) {
       if (input === document.activeElement) continue;
-      input.value = String(input.dataset.segField === "start" ? seg.start : seg.end);
+      input.value = formatTimecodeFull(input.dataset.segField === "start" ? seg.start : seg.end);
     }
   }
+}
+
+function linesLabel(n: number): string {
+  const t = window.__I18N__.editor;
+  return `${n} ${n === 1 ? t.line : t.lines}`;
 }
 
 function onSegmentsChange(): void {
   updateRowStates();
   timeline.renderBlocks();
+  countEl.textContent = linesLabel(session.segments.length);
   updateOverlay();
 }
 
@@ -337,8 +502,6 @@ function doRedo(): void {
   focusAfterHistory();
 }
 
-// Tras reconstruir la lista (y posiblemente deshabilitar el botón con foco),
-// devuelve el foco a un control estable.
 function focusAfterHistory(): void {
   if (!undoBtn.disabled) undoBtn.focus();
   else if (!redoBtn.disabled) redoBtn.focus();
@@ -348,9 +511,4 @@ function focusAfterHistory(): void {
 function updateUndoRedo(): void {
   undoBtn.disabled = !history.canUndo();
   redoBtn.disabled = !history.canRedo();
-}
-
-// helper para evitar choque de nombre con el `seek` local del listado
-function seekTo(time: number): void {
-  seek(time);
 }

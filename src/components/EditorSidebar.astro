@@ -10,8 +10,21 @@ const { lang } = Astro.props;
 const e = ui[lang].app.editor;
 ---
 
-<div class="flex max-h-[36rem] flex-col rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
-  <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.segments}</span>
-  <ul data-editor="segments" class="mt-3 flex-1 space-y-2 overflow-y-auto pr-1"></ul>
-  <p data-editor="empty" hidden class="mt-3 text-sm text-on-deep-soft"></p>
-</div>
+<aside class="flex h-full flex-col bg-deep-soft lg:border-l lg:border-on-deep-soft/15">
+  <div class="flex items-center justify-between border-b border-on-deep-soft/15 px-4 py-3">
+    <span class="rounded-pill bg-deep px-3 py-1 text-sm font-medium text-on-deep">{e.tracks}</span>
+    <button type="button" data-editor="add-language" disabled class="rounded-pill border border-on-deep-soft/25 px-3 py-1.5 text-xs text-on-deep-soft transition disabled:cursor-not-allowed disabled:opacity-50">+ {e.addLanguage}</button>
+  </div>
+
+  <div class="relative min-h-0 flex-1">
+    <ul data-editor="segments" class="absolute inset-0 space-y-2 overflow-y-auto p-3"></ul>
+    <p data-editor="empty" hidden class="absolute inset-0 grid place-items-center p-6 text-center text-sm text-on-deep-soft"></p>
+  </div>
+
+  <div class="flex items-center justify-between border-t border-on-deep-soft/15 px-4 py-2.5">
+    <button type="button" data-editor="add-line" class="inline-flex items-center gap-1.5 rounded-pill px-2 py-1 text-sm text-aqua transition hover:text-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
+      <span class="text-base leading-none">+</span> {e.addLine}
+    </button>
+    <span data-editor="count" class="font-mono text-xs text-on-deep-soft"></span>
+  </div>
+</aside>
