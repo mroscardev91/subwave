@@ -26,11 +26,12 @@ export function select(id: string | null): void {
 
 // Edición de texto en vivo (sin snapshot por tecla); el snapshot se hace al
 // confirmar (commit), p. ej. al salir del campo.
+// No emite: el editor parchea el overlay y el bloque de la timeline en vivo,
+// para no reconstruir toda la timeline en cada tecla.
 export function setText(id: string, text: string): void {
   const seg = session.segments.find((s) => s.id === id);
   if (!seg || seg.text === text) return;
   seg.text = text;
-  emit();
 }
 
 /** Registra una instantánea del estado actual (al confirmar una edición). */
@@ -44,6 +45,32 @@ export function updateTiming(id: string, start: number, end: number): void {
   // No negativos y end >= start; bajar end por debajo de start NO arrastra start.
   seg.start = Math.max(0, start);
   seg.end = Math.max(seg.start, end);
+  history.record(session.segments);
+  emit();
+}
+
+let counter = 0;
+
+/** Añade una línea tras la seleccionada (o al final). Devuelve su id. */
+export function addSegment(): string {
+  const idx = selectedId ? session.segments.findIndex((s) => s.id === selectedId) : session.segments.length - 1;
+  const prev = session.segments[idx];
+  const start = prev ? prev.end : 0;
+  const seg = { id: `seg-new-${++counter}`, start, end: start + 2, text: "" };
+  session.segments.splice(idx + 1, 0, seg);
+  selectedId = seg.id;
+  history.record(session.segments);
+  emit();
+  return seg.id;
+}
+
+export function removeSegment(id: string): void {
+  const idx = session.segments.findIndex((s) => s.id === id);
+  if (idx < 0) return;
+  session.segments.splice(idx, 1);
+  if (selectedId === id) {
+    selectedId = session.segments[Math.min(idx, session.segments.length - 1)]?.id ?? null;
+  }
   history.record(session.segments);
   emit();
 }
