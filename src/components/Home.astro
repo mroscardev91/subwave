@@ -35,7 +35,7 @@ const home = `${localePath[lang]}/`;
          class={`rounded-pill px-2.5 py-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${lang === "es" ? "bg-ink text-paper" : "text-ink-soft hover:text-ink"}`}>ES</a>
     </span>
 
-    <a href="#how" class="ml-1 rounded-pill bg-ink px-4 py-2 font-medium text-paper transition hover:bg-aqua hover:text-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper">{t.nav.start}</a>
+    <a href="#app" data-action="start" class="ml-1 rounded-pill bg-ink px-4 py-2 font-medium text-paper transition hover:bg-aqua hover:text-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper">{t.nav.start}</a>
   </nav>
 </header>
 
@@ -47,13 +47,13 @@ const home = `${localePath[lang]}/`;
         <span class="inline-block h-1.5 w-1.5 rounded-full bg-aqua-deep" aria-hidden="true"></span>
         {t.hero.badge}
       </p>
-      <h1 class="mt-5 text-5xl leading-[1.05] text-ink sm:text-6xl lg:text-7xl">
+      <h1 data-landing-heading tabindex="-1" class="mt-5 text-5xl leading-[1.05] text-ink focus:outline-none sm:text-6xl lg:text-7xl">
         {t.hero.titleLead} <em class="italic text-ink underline decoration-aqua-deep decoration-[3px] underline-offset-[8px]">{t.hero.titleEm}</em>
       </h1>
       <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">{t.hero.sub}</p>
 
       <div class="mt-8 flex flex-wrap items-center gap-3">
-        <a href="#how" class="rounded-pill bg-aqua px-6 py-3 font-medium text-deep shadow-soft transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper">{t.hero.ctaPrimary}</a>
+        <a href="#app" data-action="start" class="rounded-pill bg-aqua px-6 py-3 font-medium text-deep shadow-soft transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-paper">{t.hero.ctaPrimary}</a>
         <a href="#how" class="rounded-pill border border-line bg-paper-soft px-6 py-3 font-medium text-ink transition hover:border-ink-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink">{t.hero.ctaSecondary}</a>
       </div>
 
