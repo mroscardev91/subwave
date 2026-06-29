@@ -1,0 +1,5 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Subwave">
+  <rect width="64" height="64" rx="15" fill="#070B10"/>
+  <path d="M13 30 C20 20 27 20 31 30 C35 40 44 40 51 30" fill="none" stroke="#2DE0CE" stroke-width="5" stroke-linecap="round"/>
+  <path d="M13 41 C20 34 27 34 31 41 C35 48 44 48 51 41" fill="none" stroke="#15B5A6" stroke-width="3.5" stroke-linecap="round"/>
+</svg>
