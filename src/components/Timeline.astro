@@ -1,0 +1,19 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const e = ui[lang].app.editor;
+---
+
+<div class="rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+  <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.timeline}</span>
+  <div data-editor="timeline-track" class="relative mt-3 h-14 cursor-pointer overflow-hidden rounded-lg bg-deep">
+    <div data-editor="timeline-blocks" class="absolute inset-0"></div>
+    <div data-editor="timeline-playhead" class="pointer-events-none absolute top-0 bottom-0 left-0 w-0.5 bg-aqua" style="left:0%"></div>
+  </div>
+</div>
