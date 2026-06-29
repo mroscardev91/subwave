@@ -1,0 +1,31 @@
+# build output
+dist/
+# generated types
+.astro/
+# deps
+node_modules/
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+# env
+.env
+.env.*
+!.env.example
+# macOS
+.DS_Store
+# editor
+.vscode/
+.idea/
+# vercel
+.vercel/
+# autoskills tooling (regenerable via `npx autoskills`)
+.agents/
+# autoskills-managed skills are symlinks into .agents/ (would dangle on clone);
+# track only the project's own Subwave skills.
+.claude/skills/*
+!.claude/skills/browser-asr-transformers/
+!.claude/skills/ffmpeg-wasm-audio/
+!.claude/skills/astro-static-i18n/
+!.claude/skills/tailwind-v4-theming/
+!.claude/skills/webcodecs-video-export/
