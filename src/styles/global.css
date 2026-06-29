@@ -57,3 +57,22 @@
     *, *::before, *::after { animation: none !important; transition: none !important; }
   }
 }
+
+/* Editor: elementos creados en runtime (timeline, filas de segmento). Globales
+   porque los pinta JS y no llevan el data-attr de scope de Astro. */
+.timeline-block {
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  border-radius: 6px;
+  background: color-mix(in oklab, var(--color-aqua) 28%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-aqua) 45%, transparent);
+  transition: background 0.15s;
+}
+.timeline-block:hover { background: color-mix(in oklab, var(--color-aqua) 42%, transparent); }
+.timeline-block.is-active { background: color-mix(in oklab, var(--color-aqua) 60%, transparent); }
+.timeline-block.is-selected { border-color: var(--color-aqua); box-shadow: 0 0 0 1px var(--color-aqua); }
+.timeline-block:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+
+.seg-row.is-selected { border-color: var(--color-aqua); }
+.seg-row.is-active { background: color-mix(in oklab, var(--color-aqua) 16%, transparent); }

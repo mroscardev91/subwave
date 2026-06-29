@@ -1,0 +1,65 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const e = ui[lang].app.editor;
+const sb = e.styleBar;
+
+const field = "flex flex-col gap-1.5 text-xs font-mono uppercase tracking-wide text-on-deep-soft";
+const select =
+  "rounded-lg border border-on-deep-soft/25 bg-deep px-3 py-1.5 font-sans text-sm normal-case text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
+---
+
+<div class="rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+  <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.style}</span>
+
+  <div class="mt-3 flex flex-wrap items-end gap-x-5 gap-y-4">
+    <label class={field}>
+      {sb.font}
+      <select data-style="font" class={select}>
+        <option value="sans">{sb.sans}</option>
+        <option value="serif">{sb.serif}</option>
+        <option value="mono">{sb.mono}</option>
+      </select>
+    </label>
+
+    <label class={field}>
+      {sb.size}
+      <input type="range" data-style="size" min="16" max="48" step="1" class="accent-aqua" />
+    </label>
+
+    <label class={field}>
+      {sb.color}
+      <input type="color" data-style="color" class="h-9 w-12 cursor-pointer rounded-lg border border-on-deep-soft/25 bg-deep" />
+    </label>
+
+    <label class={field}>
+      {sb.background}
+      <input type="color" data-style="bg" class="h-9 w-12 cursor-pointer rounded-lg border border-on-deep-soft/25 bg-deep" />
+    </label>
+
+    <label class={field}>
+      {sb.opacity}
+      <input type="range" data-style="bgOpacity" min="0" max="100" step="5" class="accent-aqua" />
+    </label>
+
+    <label class="flex cursor-pointer items-center gap-2 pb-1.5 text-sm text-on-deep">
+      <input type="checkbox" data-style="outline" class="h-4 w-4 accent-aqua" />
+      {sb.outline}
+    </label>
+
+    <label class={field}>
+      {sb.position}
+      <select data-style="position" class={select}>
+        <option value="top">{sb.top}</option>
+        <option value="middle">{sb.middle}</option>
+        <option value="bottom">{sb.bottom}</option>
+      </select>
+    </label>
+  </div>
+</div>

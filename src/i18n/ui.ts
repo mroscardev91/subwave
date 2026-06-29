@@ -29,7 +29,32 @@ export interface UIStrings {
     privateChip: string;
     upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; chooseAnother: string; next: string };
     config: { title: string; lead: string; source: string; target: string; autodetect: string; note: string; transcribe: string };
-    editor: { title: string; lead: string; segments: string; preview: string; timeline: string; style: string; export: string; soon: string };
+    editor: {
+      title: string;
+      lead: string;
+      segments: string;
+      preview: string;
+      timeline: string;
+      style: string;
+      export: string;
+      undo: string;
+      redo: string;
+      styleBar: {
+        font: string;
+        size: string;
+        color: string;
+        background: string;
+        opacity: string;
+        outline: string;
+        position: string;
+        top: string;
+        middle: string;
+        bottom: string;
+        sans: string;
+        serif: string;
+        mono: string;
+      };
+    };
   };
   /** Strings serialized to window.__I18N__ for runtime scripts. */
   client: {
@@ -52,6 +77,9 @@ export interface UIStrings {
     };
     editor: {
       empty: string;
+      segStart: string;
+      segEnd: string;
+      segText: string;
     };
   };
 }
@@ -130,13 +158,29 @@ export const ui: Record<Lang, UIStrings> = {
       },
       editor: {
         title: "Edit your subtitles",
-        lead: "Tweak text and timings on the timeline. Style and export when you're ready.",
+        lead: "Tweak text and timings, style the captions, and play to preview.",
         segments: "Segments",
         preview: "Preview",
         timeline: "Timeline",
         style: "Subtitle style",
         export: "Export",
-        soon: "Comes together in the next steps.",
+        undo: "Undo",
+        redo: "Redo",
+        styleBar: {
+          font: "Font",
+          size: "Size",
+          color: "Text",
+          background: "Background",
+          opacity: "Opacity",
+          outline: "Outline",
+          position: "Position",
+          top: "Top",
+          middle: "Middle",
+          bottom: "Bottom",
+          sans: "Sans",
+          serif: "Serif",
+          mono: "Mono",
+        },
       },
     },
     client: {
@@ -159,6 +203,9 @@ export const ui: Record<Lang, UIStrings> = {
       },
       editor: {
         empty: "No speech was detected in this file.",
+        segStart: "Start",
+        segEnd: "End",
+        segText: "Subtitle text",
       },
     },
   },
@@ -236,13 +283,29 @@ export const ui: Record<Lang, UIStrings> = {
       },
       editor: {
         title: "Edita tus subtítulos",
-        lead: "Ajusta texto y tiempos en la timeline. Aplica estilo y exporta cuando quieras.",
+        lead: "Ajusta texto y tiempos, dale estilo y reproduce para previsualizar.",
         segments: "Segmentos",
         preview: "Vista previa",
         timeline: "Línea de tiempo",
         style: "Estilo de subtítulo",
         export: "Exportar",
-        soon: "Se completa en los siguientes pasos.",
+        undo: "Deshacer",
+        redo: "Rehacer",
+        styleBar: {
+          font: "Fuente",
+          size: "Tamaño",
+          color: "Texto",
+          background: "Fondo",
+          opacity: "Opacidad",
+          outline: "Contorno",
+          position: "Posición",
+          top: "Arriba",
+          middle: "Centro",
+          bottom: "Abajo",
+          sans: "Sans",
+          serif: "Serif",
+          mono: "Mono",
+        },
       },
     },
     client: {
@@ -265,6 +328,9 @@ export const ui: Record<Lang, UIStrings> = {
       },
       editor: {
         empty: "No se detectó voz en este archivo.",
+        segStart: "Inicio",
+        segEnd: "Fin",
+        segText: "Texto del subtítulo",
       },
     },
   },

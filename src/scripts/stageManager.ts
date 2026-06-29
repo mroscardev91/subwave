@@ -31,8 +31,14 @@ export function init(): void {
   };
 }
 
+function pauseMedia(): void {
+  if (!refs) return;
+  for (const m of refs.app.querySelectorAll<HTMLMediaElement>("video, audio")) m.pause();
+}
+
 export function goTo(stage: StageName): void {
   if (!refs) return;
+  pauseMedia(); // no dejes el preview sonando al cambiar de etapa
   for (const [name, el] of refs.stages) el.hidden = name !== stage;
   const reached = ORDER.indexOf(stage);
   for (const [name, el] of refs.steps) {
@@ -57,6 +63,7 @@ export function enterApp(): void {
 
 export function exitApp(): void {
   if (!refs) return;
+  pauseMedia();
   refs.app.hidden = true;
   refs.landing.hidden = false;
   document.body.classList.replace("editor", "landing");

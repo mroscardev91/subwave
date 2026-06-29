@@ -1,0 +1,17 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const e = ui[lang].app.editor;
+---
+
+<div class="flex max-h-[36rem] flex-col rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
+  <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.segments}</span>
+  <ul data-editor="segments" class="mt-3 flex-1 space-y-2 overflow-y-auto pr-1"></ul>
+  <p data-editor="empty" hidden class="mt-3 text-sm text-on-deep-soft"></p>
+</div>

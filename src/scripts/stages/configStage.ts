@@ -6,7 +6,7 @@ import { ensureAsr, transcribe } from "@/scripts/transformersClient";
 import { segmentsFromAsr } from "@/scripts/subtitles";
 import { session } from "@/scripts/session";
 import { goTo, getCurrent } from "@/scripts/stageManager";
-import { renderSegments } from "@/scripts/stages/editorStage";
+import { enterEditor } from "@/scripts/stages/editorStage";
 
 const MODEL = "Xenova/whisper-base";
 
@@ -90,7 +90,7 @@ export function initConfigStage(): void {
       // Si el usuario navegó fuera durante la transcripción, no secuestres la
       // navegación llevándolo al editor.
       if (getCurrent() !== "config") return;
-      renderSegments();
+      enterEditor();
       goTo("editor");
     } catch {
       progress.hidden = true;
