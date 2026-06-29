@@ -4,7 +4,8 @@
 
 import { ensureAsr, transcribe } from "@/scripts/transformersClient";
 import { segmentsFromAsr } from "@/scripts/subtitles";
-import { session } from "@/scripts/session";
+import { session, setTracks } from "@/scripts/session";
+import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
 
@@ -54,7 +55,7 @@ export function initConfigStage(): void {
     if (!session.audio) return; // gated by upload; nothing to transcribe
 
     session.sourceLang = sourceSel.value === "auto" ? null : sourceSel.value;
-    session.targetLang = targetSel.value;
+    session.targetLang = targetSel.value || null;
 
     setBusy(true);
     errorBox.hidden = true;
@@ -80,7 +81,23 @@ export function initConfigStage(): void {
       setBar(null);
 
       const output = await transcribe(session.audio, session.sourceLang ?? undefined);
-      session.segments = segmentsFromAsr(output);
+      const srcCode = session.sourceLang ?? "auto";
+      const tracks = [{ lang: srcCode, segments: segmentsFromAsr(output) }];
+
+      // Si el idioma de salida difiere (y conocemos el de origen), traduce con NLLB.
+      if (session.targetLang && session.targetLang !== srcCode && srcCode !== "auto") {
+        const translated = await translateSegments(tracks[0].segments, srcCode, session.targetLang, {
+          onPhase: (phase) => {
+            statusEl.textContent = phase === "loading" ? t.downloadingTr : t.translating;
+            setBar(phase === "loading" ? 0 : null);
+          },
+          onProgress: (p) => {
+            if (p?.status === "progress" && typeof p.progress === "number") setBar(p.progress / 100);
+          },
+        });
+        tracks.push({ lang: session.targetLang, segments: translated });
+      }
+      setTracks(tracks);
 
       // Restaura el formulario por si se vuelve a esta etapa.
       progress.hidden = true;
@@ -103,4 +120,14 @@ export function initConfigStage(): void {
   }
 
   transcribeBtn.addEventListener("click", () => void run());
+
+  // La traducción (OPUS-MT) necesita un idioma de origen conocido. Con
+  // autodetectar no se puede, así que se deshabilita el destino.
+  function syncTarget(): void {
+    const auto = sourceSel.value === "auto";
+    targetSel.disabled = auto;
+    if (auto) targetSel.value = "";
+  }
+  sourceSel.addEventListener("change", syncTarget);
+  syncTarget();
 }

@@ -3,11 +3,13 @@
 // (play + tiempos + texto + borrar + añadir línea), presets de estilo y timeline
 // con el texto en los bloques. Undo/redo y estilo en vivo.
 
-import { session } from "@/scripts/session";
+import { session, setActiveTrack, addTrack } from "@/scripts/session";
 import { formatTimecode, formatTimecodeFull, parseTimecode } from "@/scripts/subtitles";
 import * as segs from "@/scripts/editorSegments";
 import * as history from "@/scripts/editorHistory";
 import * as timeline from "@/scripts/timeline";
+import { translateSegments } from "@/scripts/translate";
+import { languageOptions, langLabel } from "@/scripts/languages";
 import { applyBubbleStyle, positionToAlign, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
 
 let stage: HTMLElement;
@@ -26,6 +28,9 @@ let playBtn: HTMLButtonElement;
 let timeEl: HTMLElement;
 let filenameEl: HTMLElement;
 let customPanel: HTMLElement;
+let tracksEl: HTMLElement;
+let addLangSel: HTMLSelectElement;
+let trackStatusEl: HTMLElement;
 let wired = false;
 let activeId: string | null = null;
 
@@ -53,6 +58,9 @@ export function initEditorStage(): void {
   timeEl = q('[data-editor="time"]');
   filenameEl = q('[data-editor="filename"]');
   customPanel = q('[data-editor="custom"]');
+  tracksEl = q('[data-editor="tracks"]');
+  addLangSel = q('[data-editor="add-lang"]');
+  trackStatusEl = q('[data-editor="track-status"]');
 
   timeline.initTimeline({
     track: q('[data-editor="timeline-track"]'),
@@ -76,6 +84,11 @@ export function initEditorStage(): void {
     const li = listEl.querySelector<HTMLElement>(`.seg-row[data-seg-id="${id}"]`);
     li?.scrollIntoView({ block: "nearest" });
     li?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
+  });
+  addLangSel.addEventListener("change", () => {
+    const code = addLangSel.value;
+    addLangSel.value = "";
+    if (code) void addLanguage(code);
   });
   q('[data-editor="customize-toggle"]').addEventListener("click", (e) => {
     const btn = e.currentTarget as HTMLElement;
@@ -113,6 +126,7 @@ export function enterEditor(): void {
   initEditorStage();
   segs.init();
   mountMedia();
+  renderTracks();
   applyStyle();
   applyStyleToControls();
   renderList();
@@ -511,4 +525,82 @@ function focusAfterHistory(): void {
 function updateUndoRedo(): void {
   undoBtn.disabled = !history.canUndo();
   redoBtn.disabled = !history.canRedo();
+}
+
+// ---- pistas multi-idioma ----
+
+function renderTracks(): void {
+  tracksEl.replaceChildren();
+  session.tracks.forEach((tr, i) => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    const on = i === session.activeTrack;
+    tab.setAttribute("aria-pressed", String(on));
+    tab.className = `rounded-pill px-3 py-1 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua ${on ? "bg-aqua text-deep" : "bg-deep text-on-deep-soft hover:text-on-deep"}`;
+    tab.textContent = tr.lang === "auto" ? window.__I18N__.editor.original : langLabel(tr.lang);
+    tab.addEventListener("click", () => switchTrack(i));
+    tracksEl.appendChild(tab);
+  });
+
+  // Opciones del selector: idiomas aún no presentes.
+  const present = new Set(session.tracks.map((t) => t.lang));
+  for (const opt of [...addLangSel.querySelectorAll("option")]) {
+    if (opt.value !== "") opt.remove();
+  }
+  for (const l of languageOptions) {
+    if (present.has(l.code)) continue;
+    const opt = document.createElement("option");
+    opt.value = l.code;
+    opt.textContent = l.label;
+    addLangSel.appendChild(opt);
+  }
+  // Solo se puede traducir si conocemos el idioma de origen (no "auto").
+  const source = session.tracks[0];
+  addLangSel.disabled = !source || source.lang === "auto";
+}
+
+function switchTrack(index: number): void {
+  if (index === session.activeTrack) return;
+  setActiveTrack(index);
+  segs.init();
+  renderTracks();
+  renderList();
+  timeline.renderRuler();
+  timeline.renderBlocks();
+  timeline.setPlayhead(media?.currentTime ?? 0);
+  activeId = null;
+  updateOverlay();
+  updateUndoRedo();
+  tracksEl.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+}
+
+async function addLanguage(code: string): Promise<void> {
+  const source = session.tracks[0];
+  if (!source) return;
+  const c = window.__I18N__.config;
+  addLangSel.disabled = true;
+  trackStatusEl.textContent = c.preparing;
+  trackStatusEl.focus(); // el botón pulsado se deshabilita; ancla el foco y anuncia
+  try {
+    const translated = await translateSegments(source.segments, source.lang, code, {
+      onPhase: (phase) => {
+        trackStatusEl.textContent = phase === "loading" ? c.downloadingTr : c.translating;
+      },
+    });
+    const idx = addTrack({ lang: code, segments: translated });
+    setActiveTrack(idx);
+    segs.init();
+    trackStatusEl.textContent = "";
+    renderTracks();
+    renderList();
+    timeline.renderBlocks();
+    activeId = null;
+    updateOverlay();
+    updateUndoRedo();
+    tracksEl.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+  } catch {
+    trackStatusEl.textContent = "";
+    renderTracks();
+    addLangSel.focus();
+  }
 }

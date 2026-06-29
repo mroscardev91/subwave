@@ -11,9 +11,14 @@ const e = ui[lang].app.editor;
 ---
 
 <aside class="flex h-full flex-col bg-deep-soft lg:border-l lg:border-on-deep-soft/15">
-  <div class="flex items-center justify-between border-b border-on-deep-soft/15 px-4 py-3">
-    <span class="rounded-pill bg-deep px-3 py-1 text-sm font-medium text-on-deep">{e.tracks}</span>
-    <button type="button" data-editor="add-language" disabled class="rounded-pill border border-on-deep-soft/25 px-3 py-1.5 text-xs text-on-deep-soft transition disabled:cursor-not-allowed disabled:opacity-50">+ {e.addLanguage}</button>
+  <div class="flex items-center justify-between gap-2 border-b border-on-deep-soft/15 px-4 py-3">
+    <div data-editor="tracks" class="flex flex-wrap items-center gap-1" role="group" aria-label={e.tracks}></div>
+    <div class="flex shrink-0 items-center gap-2">
+      <span data-editor="track-status" role="status" tabindex="-1" class="font-mono text-[11px] text-on-deep-soft focus:outline-none"></span>
+      <select data-editor="add-lang" aria-label={e.addLanguage} class="rounded-pill border border-on-deep-soft/25 bg-deep px-2.5 py-1.5 text-xs text-on-deep-soft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-50">
+        <option value="">+ {e.addLanguage}</option>
+      </select>
+    </div>
   </div>
 
   <div class="relative min-h-0 flex-1">

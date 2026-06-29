@@ -28,7 +28,7 @@ export interface UIStrings {
     restart: string;
     privateChip: string;
     upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; chooseAnother: string; next: string };
-    config: { title: string; lead: string; source: string; target: string; autodetect: string; note: string; transcribe: string };
+    config: { title: string; lead: string; source: string; target: string; autodetect: string; sameAsAudio: string; note: string; transcribe: string };
     editor: {
       title: string;
       lead: string;
@@ -86,6 +86,8 @@ export interface UIStrings {
       preparing: string;
       downloading: string;
       transcribing: string;
+      downloadingTr: string;
+      translating: string;
       errorGeneric: string;
     };
     editor: {
@@ -99,6 +101,7 @@ export interface UIStrings {
       lines: string;
       mediaPlay: string;
       mediaPause: string;
+      original: string;
     };
   };
 }
@@ -135,7 +138,7 @@ export const ui: Record<Lang, UIStrings> = {
         },
         {
           title: "Edit & export",
-          body: "Tweak text and timings, translate with NLLB, then export an .srt or a video with burned-in subtitles.",
+          body: "Tweak text and timings, translate it on-device, then export an .srt or a video with burned-in subtitles.",
         },
       ],
     },
@@ -168,11 +171,12 @@ export const ui: Record<Lang, UIStrings> = {
       },
       config: {
         title: "Set your languages",
-        lead: "Pick the spoken language and the subtitle language. If they differ, Subwave translates with NLLB.",
+        lead: "Pick the spoken language, then a subtitle language. Choose a different one to translate it on-device.",
         source: "Spoken language",
         target: "Subtitle language",
         autodetect: "Auto-detect",
-        note: "Same language = transcription only. Different = transcription + translation.",
+        sameAsAudio: "Same as audio",
+        note: "To translate, pick the spoken language (auto-detect can't translate) and a different subtitle language.",
         transcribe: "Transcribe",
       },
       editor: {
@@ -231,6 +235,8 @@ export const ui: Record<Lang, UIStrings> = {
         preparing: "Preparing…",
         downloading: "Downloading the AI model…",
         transcribing: "Transcribing…",
+        downloadingTr: "Downloading the translation model…",
+        translating: "Translating…",
         errorGeneric: "Transcription failed. Please try again.",
       },
       editor: {
@@ -244,6 +250,7 @@ export const ui: Record<Lang, UIStrings> = {
         lines: "lines",
         mediaPlay: "Play",
         mediaPause: "Pause",
+        original: "Original",
       },
     },
   },
@@ -279,7 +286,7 @@ export const ui: Record<Lang, UIStrings> = {
         },
         {
           title: "Edita y exporta",
-          body: "Ajusta texto y tiempos, traduce con NLLB y exporta un .srt o un vídeo con los subtítulos quemados.",
+          body: "Ajusta texto y tiempos, traduce en tu dispositivo y exporta un .srt o un vídeo con los subtítulos quemados.",
         },
       ],
     },
@@ -312,11 +319,12 @@ export const ui: Record<Lang, UIStrings> = {
       },
       config: {
         title: "Elige los idiomas",
-        lead: "Indica el idioma hablado y el de los subtítulos. Si difieren, Subwave traduce con NLLB.",
+        lead: "Indica el idioma hablado y luego el de los subtítulos. Elige uno distinto para traducir en tu dispositivo.",
         source: "Idioma hablado",
         target: "Idioma de subtítulos",
         autodetect: "Autodetectar",
-        note: "Mismo idioma = solo transcripción. Distinto = transcripción + traducción.",
+        sameAsAudio: "Igual que el audio",
+        note: "Para traducir, indica el idioma hablado (autodetectar no puede traducir) y un idioma de subtítulos distinto.",
         transcribe: "Transcribir",
       },
       editor: {
@@ -375,6 +383,8 @@ export const ui: Record<Lang, UIStrings> = {
         preparing: "Preparando…",
         downloading: "Descargando el modelo de IA…",
         transcribing: "Transcribiendo…",
+        downloadingTr: "Descargando el modelo de traducción…",
+        translating: "Traduciendo…",
         errorGeneric: "La transcripción falló. Inténtalo de nuevo.",
       },
       editor: {
@@ -388,6 +398,7 @@ export const ui: Record<Lang, UIStrings> = {
         lines: "líneas",
         mediaPlay: "Reproducir",
         mediaPause: "Pausar",
+        original: "Original",
       },
     },
   },

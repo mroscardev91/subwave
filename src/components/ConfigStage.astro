@@ -1,6 +1,7 @@
 ---
 import { ui } from "@/i18n/ui";
 import type { Lang } from "@/i18n/locales";
+import { languageOptions } from "@/scripts/languages";
 
 interface Props {
   lang: Lang;
@@ -8,16 +9,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const c = ui[lang].app.config;
-
-// Lista mínima para Hito 2; el catálogo real (Whisper/NLLB) llega en Hitos 4 y 6.
-const langs = [
-  { code: "en", label: "English" },
-  { code: "es", label: "Español" },
-  { code: "fr", label: "Français" },
-  { code: "de", label: "Deutsch" },
-  { code: "pt", label: "Português" },
-  { code: "it", label: "Italiano" },
-];
+const langs = languageOptions;
 
 const selectClass =
   "mt-2 w-full appearance-none rounded-card border border-on-deep-soft/25 bg-deep-soft px-4 py-3 text-on-deep transition focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
@@ -39,7 +31,8 @@ const selectClass =
       <div>
         <label for="cfg-target" class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{c.target}</label>
         <select id="cfg-target" class={selectClass}>
-          {langs.map((l) => <option value={l.code} selected={l.code === lang}>{l.label}</option>)}
+          <option value="">{c.sameAsAudio}</option>
+          {langs.map((l) => <option value={l.code}>{l.label}</option>)}
         </select>
       </div>
     </div>
