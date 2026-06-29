@@ -1,6 +1,8 @@
 // Estado de la sesión de trabajo, compartido entre etapas (upload → config →
 // editor → export). Nada de esto sale del navegador.
 
+import type { Segment } from "@/scripts/subtitles";
+
 export type MediaKind = "video" | "audio";
 
 export interface MediaSession {
@@ -12,6 +14,12 @@ export interface MediaSession {
   audio: Float32Array | null;
   sampleRate: number;
   duration: number;
+  /** Idioma hablado (código Whisper) o null para autodetectar. */
+  sourceLang: string | null;
+  /** Idioma de los subtítulos de salida. */
+  targetLang: string | null;
+  /** Segmentos transcritos. */
+  segments: Segment[];
 }
 
 export const session: MediaSession = {
@@ -21,6 +29,9 @@ export const session: MediaSession = {
   audio: null,
   sampleRate: 16000,
   duration: 0,
+  sourceLang: null,
+  targetLang: null,
+  segments: [],
 };
 
 export function setFile(file: File, kind: MediaKind): void {
@@ -44,4 +55,7 @@ export function resetMedia(): void {
   session.audio = null;
   session.sampleRate = 16000;
   session.duration = 0;
+  session.sourceLang = null;
+  session.targetLang = null;
+  session.segments = [];
 }
