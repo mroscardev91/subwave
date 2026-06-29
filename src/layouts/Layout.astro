@@ -1,0 +1,92 @@
+---
+import "@/styles/global.css";
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+  /** "landing" = paper mode, "editor" = deep-water mode. */
+  bodyClass?: "landing" | "editor";
+}
+
+const { lang, bodyClass = "landing" } = Astro.props;
+const t = ui[lang];
+
+const site = Astro.site!;
+// Path without the locale prefix, so we can build both locale URLs.
+const basePath = Astro.url.pathname.replace(/^\/es(?=\/|$)/, "") || "/";
+const canonical = new URL(lang === "es" ? `/es${basePath === "/" ? "/" : basePath}` : basePath, site);
+const enHref = new URL(basePath, site);
+const esHref = new URL(`/es${basePath === "/" ? "/" : basePath}`, site);
+const ogImage = new URL("/og.png", site);
+const themeColor = bodyClass === "editor" ? "#070B10" : "#F3F4F2";
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{t.meta.title}</title>
+    <meta name="description" content={t.meta.description} />
+    <meta name="theme-color" content={themeColor} />
+
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="en" href={enHref} />
+    <link rel="alternate" hreflang="es" href={esHref} />
+    <link rel="alternate" hreflang="x-default" href={enHref} />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Subwave" />
+    <meta property="og:locale" content={lang === "es" ? "es_ES" : "en_US"} />
+    <meta property="og:title" content={t.meta.title} />
+    <meta property="og:description" content={t.meta.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={t.meta.title} />
+    <meta name="twitter:description" content={t.meta.description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {/* Client-side locale redirect: static site has no server middleware. */}
+    <script is:inline>
+      if (
+        location.pathname === "/" &&
+        !localStorage.getItem("locale") &&
+        (navigator.language || "").toLowerCase().startsWith("es")
+      ) {
+        location.replace("/es/");
+      }
+    </script>
+
+    {/* Active-locale runtime strings — one language per page. */}
+    <script is:inline define:vars={{ I18N: t.client, LANG: lang }}>
+      window.__I18N__ = I18N;
+      window.__LANG__ = LANG;
+    </script>
+  </head>
+
+  <body class={bodyClass}>
+    <slot />
+
+    {/* Persist explicit locale choice so the redirect above won't override it. */}
+    <script is:inline>
+      for (const link of document.querySelectorAll("[data-locale]")) {
+        link.addEventListener("click", () => {
+          localStorage.setItem("locale", link.getAttribute("data-locale"));
+        });
+      }
+    </script>
+  </body>
+</html>
