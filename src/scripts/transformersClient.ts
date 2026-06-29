@@ -1,7 +1,8 @@
-// Capa que habla con el worker de transcripción vía mensajes con `id`. Mantiene
-// un mapa de peticiones pendientes y reenvía el progreso de descarga del modelo.
+// Capa que habla con los workers de IA (transcripción y traducción) vía mensajes
+// con `id`. El worker de traducción se crea lazy (solo si hace falta traducir).
 
-let worker: Worker | null = null;
+let asrWorker: Worker | null = null;
+let transWorker: Worker | null = null;
 let reqId = 0;
 
 interface Pending {
@@ -9,61 +10,79 @@ interface Pending {
   reject: (error: Error) => void;
 }
 const pending = new Map<number, Pending>();
-let onAsrProgress: ((payload: any) => void) | null = null;
+const onProgress: { asr?: (p: any) => void; translation?: (p: any) => void } = {};
 
-// Si el worker no puede instanciarse/evaluarse (chunk que falla, etc.), nunca
-// llegaría un mensaje y las promesas quedarían colgadas. Rechazamos todo y
-// reseteamos para poder reintentar.
+function route(event: MessageEvent): void {
+  const { id, type, payload, result, error, key } = event.data || {};
+  if (type === "progress") {
+    onProgress[key as "asr" | "translation"]?.(payload);
+    return;
+  }
+  const p = pending.get(id);
+  if (!p) return;
+  pending.delete(id);
+  if (type === "error") p.reject(new Error(error));
+  else p.resolve(result);
+}
+
+// Si un worker no puede instanciarse/evaluarse, rechaza lo pendiente y resetea.
 function failAll(error: Error): void {
   for (const p of pending.values()) p.reject(error);
   pending.clear();
-  worker?.terminate();
-  worker = null;
+  asrWorker?.terminate();
+  transWorker?.terminate();
+  asrWorker = null;
+  transWorker = null;
 }
 
-function getWorker(): Worker {
-  if (!worker) {
-    worker = new Worker(new URL("@/scripts/transcriber.worker.ts", import.meta.url), { type: "module" });
-    worker.onmessage = (event: MessageEvent) => {
-      const { id, type, payload, result, error } = event.data || {};
-      if (type === "progress") {
-        onAsrProgress?.(payload);
-        return;
-      }
-      const p = pending.get(id);
-      if (!p) return;
-      pending.delete(id);
-      if (type === "error") p.reject(new Error(error));
-      else p.resolve(result);
-    };
-    worker.onerror = () => failAll(new Error("transcriber worker error"));
-    worker.onmessageerror = () => failAll(new Error("transcriber worker message error"));
+function getAsrWorker(): Worker {
+  if (!asrWorker) {
+    asrWorker = new Worker(new URL("@/scripts/transcriber.worker.ts", import.meta.url), { type: "module" });
+    asrWorker.onmessage = route;
+    asrWorker.onerror = () => failAll(new Error("transcriber worker error"));
+    asrWorker.onmessageerror = () => failAll(new Error("transcriber worker message error"));
   }
-  return worker;
+  return asrWorker;
 }
 
-function send(type: string, payload: any, transfer: Transferable[] = []): Promise<any> {
-  const w = getWorker();
+function getTransWorker(): Worker {
+  if (!transWorker) {
+    transWorker = new Worker(new URL("@/scripts/translation.worker.ts", import.meta.url), { type: "module" });
+    transWorker.onmessage = route;
+    transWorker.onerror = () => failAll(new Error("translation worker error"));
+    transWorker.onmessageerror = () => failAll(new Error("translation worker message error"));
+  }
+  return transWorker;
+}
+
+function send(worker: Worker, type: string, payload: any, transfer: Transferable[] = []): Promise<any> {
   const id = ++reqId;
   return new Promise((resolve, reject) => {
     pending.set(id, { resolve, reject });
-    w.postMessage({ id, type, payload }, transfer);
+    worker.postMessage({ id, type, payload }, transfer);
   });
 }
 
-export interface EnsureAsrOptions {
+export interface EnsureOptions {
   webgpu?: boolean;
   onProgress?: (payload: any) => void;
 }
 
-export function ensureAsr(model: string, opts: EnsureAsrOptions = {}): Promise<void> {
-  onAsrProgress = opts.onProgress ?? null;
-  return send("ensure-asr", { model, webgpu: opts.webgpu });
+export function ensureAsr(model: string, opts: EnsureOptions = {}): Promise<void> {
+  onProgress.asr = opts.onProgress;
+  return send(getAsrWorker(), "ensure-asr", { model, webgpu: opts.webgpu });
 }
 
 export function transcribe(audio: Float32Array, language?: string): Promise<any> {
-  // Transferimos una COPIA del buffer para no dejar inservible session.audio
-  // (lo necesitamos para re-transcribir si cambia el idioma de origen).
-  const copy = audio.slice();
-  return send("transcribe", { audio: copy, language }, [copy.buffer]);
+  const copy = audio.slice(); // copia para no inutilizar session.audio
+  return send(getAsrWorker(), "transcribe", { audio: copy, language }, [copy.buffer]);
+}
+
+export function ensureTranslation(model: string, opts: { onProgress?: (p: any) => void } = {}): Promise<void> {
+  onProgress.translation = opts.onProgress;
+  return send(getTransWorker(), "ensure-translation", { model });
+}
+
+export function translate(texts: string[]): Promise<string[]> {
+  return send(getTransWorker(), "translate", { texts });
 }
