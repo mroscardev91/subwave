@@ -44,6 +44,15 @@ export interface UIStrings {
       errorUnsupported: string;
       errorGeneric: string;
     };
+    config: {
+      preparing: string;
+      downloading: string;
+      transcribing: string;
+      errorGeneric: string;
+    };
+    editor: {
+      empty: string;
+    };
   };
 }
 
@@ -142,6 +151,15 @@ export const ui: Record<Lang, UIStrings> = {
         errorUnsupported: "Unsupported file type.",
         errorGeneric: "Couldn't process that file. Try another.",
       },
+      config: {
+        preparing: "Preparing…",
+        downloading: "Downloading the AI model…",
+        transcribing: "Transcribing…",
+        errorGeneric: "Transcription failed. Please try again.",
+      },
+      editor: {
+        empty: "No speech was detected in this file.",
+      },
     },
   },
 
@@ -238,6 +256,15 @@ export const ui: Record<Lang, UIStrings> = {
         errorNoAudio: "Ese archivo no tiene pista de audio.",
         errorUnsupported: "Tipo de archivo no soportado.",
         errorGeneric: "No se pudo procesar el archivo. Prueba con otro.",
+      },
+      config: {
+        preparing: "Preparando…",
+        downloading: "Descargando el modelo de IA…",
+        transcribing: "Transcribiendo…",
+        errorGeneric: "La transcripción falló. Inténtalo de nuevo.",
+      },
+      editor: {
+        empty: "No se detectó voz en este archivo.",
       },
     },
   },

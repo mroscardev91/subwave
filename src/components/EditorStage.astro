@@ -38,17 +38,11 @@ const panelLabel = "font-mono text-xs uppercase tracking-wide text-on-deep-soft"
   </div>
 
   <div class="mt-6 grid gap-6 lg:grid-cols-[20rem_1fr]">
-    <!-- Sidebar de segmentos (placeholder) -->
+    <!-- Sidebar de segmentos: se rellena con la transcripción (Hito 4). -->
     <div class="rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
       <span class={panelLabel}>{e.segments}</span>
-      <ul class="mt-3 space-y-2" aria-hidden="true">
-        {Array.from({ length: 5 }).map(() => (
-          <li class="rounded-lg bg-on-deep-soft/8 px-3 py-3">
-            <span class="block h-2.5 w-16 rounded bg-aqua/30"></span>
-            <span class="mt-2 block h-2.5 w-full rounded bg-on-deep-soft/15"></span>
-          </li>
-        ))}
-      </ul>
+      <ul data-editor="segments" class="mt-3 max-h-[28rem] space-y-2 overflow-y-auto"></ul>
+      <p data-editor="empty" hidden class="mt-3 text-sm text-on-deep-soft"></p>
     </div>
 
     <div class="space-y-6">
