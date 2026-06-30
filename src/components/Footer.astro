@@ -4,22 +4,45 @@ import type { Lang } from "@/i18n/locales";
 
 interface Props {
   lang: Lang;
+  /** "paper" = landing claro · "deep" = app oscura. */
+  tone?: "paper" | "deep";
 }
 
-const { lang } = Astro.props;
+const { lang, tone = "paper" } = Astro.props;
 const t = ui[lang];
 const f = t.footer;
-const link =
-  "inline-flex items-center gap-1.5 rounded-pill px-1 text-ink-soft transition hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink";
+
+// Colores según el modo (papel / agua profunda).
+const c =
+  tone === "deep"
+    ? {
+        border: "border-on-deep-soft/15",
+        base: "text-on-deep-soft",
+        strong: "text-on-deep hover:text-aqua",
+        accent: "text-aqua",
+        ring: "focus-visible:ring-aqua",
+        linkHover: "hover:text-on-deep",
+        activeLang: "text-aqua",
+      }
+    : {
+        border: "border-line",
+        base: "text-ink-soft",
+        strong: "text-ink hover:text-aqua-deep",
+        accent: "text-aqua-deep",
+        ring: "focus-visible:ring-ink",
+        linkHover: "hover:text-ink",
+        activeLang: "text-aqua-deep",
+      };
+const link = `inline-flex items-center gap-1.5 rounded-pill px-1 ${c.base} transition ${c.linkHover} focus-visible:outline-none focus-visible:ring-2 ${c.ring}`;
 ---
 
-<footer class="border-t border-line">
-  <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-6 py-8 text-sm">
-    <span class="text-ink-soft">
+<footer class={`border-t ${c.border}`}>
+  <div class={`mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-6 py-8 text-sm ${c.base}`}>
+    <span>
       {f.developedBy}
-      <a href="https://github.com/mroscardev91" target="_blank" rel="noopener noreferrer" class="font-semibold text-ink hover:text-aqua-deep">mroscardev</a>
+      <a href="https://github.com/mroscardev91" target="_blank" rel="noopener noreferrer" class={`font-semibold ${c.strong}`}>mroscardev</a>
       {f.with}
-      <svg viewBox="0 0 16 16" class="inline-block h-4 w-4 align-text-bottom text-aqua-deep" aria-hidden="true"><path d="M8 14s-5-3.3-6.6-6.3C-.2 4.7 1.6 2 4.2 2 6 2 7.3 3.2 8 4.3 8.7 3.2 10 2 11.8 2c2.6 0 4.4 2.7 2.8 5.7C13 10.7 8 14 8 14z" fill="currentColor" /></svg>
+      <svg viewBox="0 0 16 16" class={`inline-block h-4 w-4 align-text-bottom ${c.accent}`} aria-hidden="true"><path d="M8 14s-5-3.3-6.6-6.3C-.2 4.7 1.6 2 4.2 2 6 2 7.3 3.2 8 4.3 8.7 3.2 10 2 11.8 2c2.6 0 4.4 2.7 2.8 5.7C13 10.7 8 14 8 14z" fill="currentColor" /></svg>
     </span>
 
     <a href="https://github.com/mroscardev91/subwave" target="_blank" rel="noopener noreferrer" class={link} aria-label={`${f.code} · GitHub`}>
@@ -28,15 +51,15 @@ const link =
     </a>
 
     <a href="https://github.com/sponsors/mroscardev91" target="_blank" rel="noopener noreferrer" class={link}>
-      <svg viewBox="0 0 16 16" class="h-4 w-4 text-aqua-deep" aria-hidden="true"><path d="M8 1v14M5 4.5C5 3 6.3 2.5 8 2.5s3 .6 3 2-1.3 2-3 2-3 .6-3 2 1.3 2 3 2 3-.6 3-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+      <svg viewBox="0 0 16 16" class={`h-4 w-4 ${c.accent}`} aria-hidden="true"><path d="M8 1v14M5 4.5C5 3 6.3 2.5 8 2.5s3 .6 3 2-1.3 2-3 2-3 .6-3 2 1.3 2 3 2 3-.6 3-2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
       {f.sponsor}
     </a>
 
     <nav class="flex items-center gap-1 font-medium" aria-label={f.language}>
       <a href="/" data-locale="en" hreflang="en" aria-current={lang === "en" ? "true" : undefined}
-         class={`rounded-pill px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${lang === "en" ? "text-aqua-deep" : "text-ink-soft hover:text-ink"}`}>English</a>
+         class={`rounded-pill px-2 py-1 focus-visible:outline-none focus-visible:ring-2 ${c.ring} ${lang === "en" ? c.activeLang : `${c.base} ${c.linkHover}`}`}>English</a>
       <a href="/es/" data-locale="es" hreflang="es" aria-current={lang === "es" ? "true" : undefined}
-         class={`rounded-pill px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink ${lang === "es" ? "text-aqua-deep" : "text-ink-soft hover:text-ink"}`}>Español</a>
+         class={`rounded-pill px-2 py-1 focus-visible:outline-none focus-visible:ring-2 ${c.ring} ${lang === "es" ? c.activeLang : `${c.base} ${c.linkHover}`}`}>Español</a>
     </nav>
   </div>
 </footer>

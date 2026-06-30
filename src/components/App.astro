@@ -3,6 +3,7 @@ import UploadStage from "@/components/UploadStage.astro";
 import ConfigStage from "@/components/ConfigStage.astro";
 import EditorStage from "@/components/EditorStage.astro";
 import StatusDock from "@/components/StatusDock.astro";
+import Footer from "@/components/Footer.astro";
 import { ui } from "@/i18n/ui";
 import type { Lang } from "@/i18n/locales";
 
@@ -19,7 +20,7 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
 ];
 ---
 
-<div id="app" hidden class="min-h-screen bg-deep text-on-deep">
+<div id="app" hidden class="flex min-h-screen flex-col bg-deep text-on-deep">
   <header class="sticky top-0 z-10 border-b border-on-deep-soft/15 bg-deep/85 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
       <button type="button" data-action="home" aria-label="Subwave" class="flex items-center gap-2.5 rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
@@ -53,11 +54,13 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
     </div>
   </header>
 
-  <main>
+  <main class="flex-1">
     <UploadStage lang={lang} />
     <ConfigStage lang={lang} />
     <EditorStage lang={lang} />
   </main>
+
+  <Footer lang={lang} tone="deep" />
 </div>
 
 <script>

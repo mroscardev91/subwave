@@ -56,6 +56,8 @@
      oculta el header global (logo + stepper) y manda la barra propia del editor,
      como en subvid. */
   #app[data-stage="editor"] > header { display: none; }
+  /* El editor ocupa toda la pantalla (sin scroll): sin footer ahí. */
+  #app[data-stage="editor"] > footer { display: none; }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
