@@ -1,4 +1,4 @@
-// Controles de export en la barra superior del editor (estilo subvid, inline):
+// Controles de export en la barra superior del editor (inline):
 // descargar .srt, formato (MP4/WebM), calidad y descargar vídeo con subtítulos
 // quemados. Sin modal: el progreso/errores se muestran en un estado aria-live.
 

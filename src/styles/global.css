@@ -24,13 +24,13 @@
   --color-success:      #3DD68C;
   --color-alert:        #FF6B6B;
 
-  /* Tipografía (homenaje a subvid) */
+  /* Tipografía */
   --font-display: "Instrument Serif", ui-serif, Georgia, serif;
   --font-sans:    "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, monospace;
 
   /* Forma */
-  --radius-card: 18px;          /* mismo radio que subvid */
+  --radius-card: 18px;
   --radius-pill: 999px;
   --shadow-soft: 0 4px 18px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.05);
 }
@@ -42,7 +42,7 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
   }
-  /* Textura de papel sutil en la landing (guiño a subvid) */
+  /* Textura de papel sutil en la landing */
   body.landing {
     background:
       radial-gradient(circle at 0% 0%, rgba(0,0,0,0.035), transparent 46%),
@@ -53,8 +53,7 @@
   /* El editor invierte a "agua profunda" */
   body.editor { background: var(--color-deep); color: var(--color-on-deep); }
   /* En el editor (etapa final) la app cabe en una pantalla, sin scroll: se
-     oculta el header global (logo + stepper) y manda la barra propia del editor,
-     como en subvid. */
+     oculta el header global (logo + stepper) y manda la barra propia del editor. */
   #app[data-stage="editor"] > header { display: none; }
   /* El editor ocupa toda la pantalla (sin scroll): sin footer ahí. */
   #app[data-stage="editor"] > footer { display: none; }
@@ -106,7 +105,7 @@
 [data-editor="bubble"] .subw { opacity: 0.42; transition: opacity 0.08s linear; }
 [data-editor="bubble"] .subw.is-spoken { opacity: 1; color: #fff; }
 
-/* Scroll fino y temático del panel de tarjetas (estilo subvid). */
+/* Scroll fino y temático del panel de tarjetas. */
 [data-editor="segments"] {
   scrollbar-width: thin;
   scrollbar-color: color-mix(in oklab, var(--color-on-deep-soft) 55%, transparent) transparent;

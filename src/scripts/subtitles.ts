@@ -25,7 +25,7 @@ export function wordsForSegment(seg: Segment): WordTiming[] {
   return tokens.map((text, i) => ({ text, start: seg.start + i * span, end: seg.start + (i + 1) * span }));
 }
 
-// Troceo estilo subvid. Una pausa larga corta el trozo aunque sea corto.
+// Troceo en trozos cortos. Una pausa larga corta el trozo aunque sea corto.
 const SILENCE_BREAK_SECONDS = 0.55;
 
 interface Word {
@@ -62,7 +62,7 @@ function wordsText(ws: Word[]): string {
   return ws.map((w) => w.text).join(" ");
 }
 
-// Agrupa palabras en trozos cortos (estilo subvid): corta por nº de palabras,
+// Agrupa palabras en trozos cortos: corta por nº de palabras,
 // longitud, pausa o fin de frase suave.
 function groupWords(chunks: any[], aspectRatio: number): Segment[] {
   const { maxChars, maxWords } = lineLimits(aspectRatio);
@@ -103,7 +103,7 @@ function groupWords(chunks: any[], aspectRatio: number): Segment[] {
 
 // Convierte la salida de Whisper (transformers.js) en segmentos. Con
 // return_timestamps:"word" los chunks son por palabra y se agrupan en trozos
-// cortos como subvid; si no, se usan los chunks (frase) directamente.
+// cortos; si no, se usan los chunks (frase) directamente.
 // `any` acotado a la frontera con la librería ML.
 export function segmentsFromAsr(output: any, options: { aspectRatio?: number } = {}): Segment[] {
   const aspectRatio = options.aspectRatio || 16 / 9;
@@ -131,7 +131,7 @@ export function formatTimecode(seconds: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/** "m:ss.ss" para los inputs de tiempo de las tarjetas (estilo subvid). */
+/** "m:ss.ss" para los inputs de tiempo de las tarjetas. */
 export function formatTimecodeFull(seconds: number): string {
   // Redondea a centésimas ANTES de separar minutos para que 59.999 -> 1:00.00.
   const cs = Math.round(Math.max(0, seconds) * 100);

@@ -1,6 +1,6 @@
 // Etapa de configuración: idioma hablado / de subtítulos y disparo de la
 // transcripción (descarga del modelo con progreso → Whisper → segmentos →
-// editor). La traducción NLLB (cuando los idiomas difieren) llega en el Hito 6.
+// editor). La traducción OPUS-MT (cuando los idiomas difieren) llega en el Hito 6.
 
 import { ensureAsr, transcribe } from "@/scripts/transformersClient";
 import { segmentsFromAsr } from "@/scripts/subtitles";
@@ -83,7 +83,7 @@ export function initConfigStage(): void {
       const output = await transcribe(session.audio, session.sourceLang ?? undefined);
       const srcCode = session.sourceLang ?? "auto";
 
-      // Aspect ratio del vídeo → trozos más cortos en vertical (como subvid).
+      // Aspect ratio del vídeo → trozos más cortos en vertical.
       let aspectRatio = 16 / 9;
       if (session.kind === "video" && session.objectUrl) {
         const v = document.createElement("video");
@@ -102,7 +102,7 @@ export function initConfigStage(): void {
       }
       const tracks = [{ lang: srcCode, segments: segmentsFromAsr(output, { aspectRatio }) }];
 
-      // Si el idioma de salida difiere (y conocemos el de origen), traduce con NLLB.
+      // Si el idioma de salida difiere (y conocemos el de origen), traduce con OPUS-MT.
       if (session.targetLang && session.targetLang !== srcCode && srcCode !== "auto") {
         const translated = await translateSegments(tracks[0].segments, srcCode, session.targetLang, {
           onPhase: (phase) => {

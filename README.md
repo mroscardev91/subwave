@@ -6,7 +6,7 @@
 [![Built with Astro](https://img.shields.io/badge/Built%20with-Astro-15B5A6.svg)](https://astro.build)
 [![100% client-side](https://img.shields.io/badge/Backend-none-070B10.svg)](#privacy-is-the-architecture)
 
-Subwave generates, edits and translates subtitles for any video or audio file **entirely in your browser**. A local Whisper model transcribes the speech, you fine-tune the timing on a timeline, optionally translate with NLLB, and export an `.srt` or a video with burned-in captions.
+Subwave generates, edits and translates subtitles for any video or audio file **entirely in your browser**. A local Whisper model transcribes the speech, you fine-tune the timing on a timeline, optionally translate locally, and export an `.srt` or a video with burned-in captions.
 
 No backend. No uploads. No API keys. No accounts. Your file never leaves your device — and you can verify it in the Network tab.
 
@@ -19,7 +19,7 @@ No backend. No uploads. No API keys. No accounts. Your file never leaves your de
 - 🔒 **Private by architecture.** Everything runs on-device. The only thing that ever downloads is the AI model — once — cached in IndexedDB.
 - ⚡ **No servers, no cost to run.** A static site you can host for free on Vercel, Cloudflare Pages, Netlify or GitHub Pages.
 - 🎛️ **Real editing.** Segment list + timeline scrubbing, text/timing edits, undo/redo, multi-language tracks, and live subtitle styling.
-- 🌍 **Translate locally.** NLLB-200 runs in your browser when the subtitle language differs from the spoken one.
+- 🌍 **Translate locally.** Lightweight OPUS-MT models run in your browser when the subtitle language differs from the spoken one.
 - 🎬 **Export anywhere.** Valid `.srt`, or an MP4 with subtitles burned in via WebCodecs (with a canvas + `MediaRecorder` fallback).
 
 ## Privacy is the architecture
@@ -35,11 +35,11 @@ Upload  →  Configure  →  Edit  →  Export
 ```
 
 1. **Upload** — drop a video or audio file (MP4, MOV, WebM, MKV, MP3, WAV, OGG). Read locally with the File API; never sent anywhere.
-2. **Configure** — pick the spoken language (or auto-detect) and the subtitle language. Different languages trigger NLLB translation.
+2. **Configure** — pick the spoken language (or auto-detect) and the subtitle language. Different languages trigger local OPUS-MT translation.
 3. **Edit** — adjust text and timings on the timeline, undo/redo, style the captions (font, color, background, outline, position, opacity, size).
 4. **Export** — download an `.srt`, or render an MP4 with the subtitles burned in.
 
-Heavy work runs in **Web Workers** so the UI stays smooth: a transcription worker (Whisper), a translation worker (NLLB), and FFmpeg WASM for audio extraction. WebGPU is used when available, with an automatic fallback to WASM.
+Heavy work runs in **Web Workers** so the UI stays smooth: a transcription worker (Whisper), a translation worker (OPUS-MT), and FFmpeg WASM for audio extraction. WebGPU is used when available, with an automatic fallback to WASM.
 
 ## Tech stack
 
@@ -49,7 +49,7 @@ Heavy work runs in **Web Workers** so the UI stays smooth: a transcription worke
 | Styling | [Tailwind CSS 4](https://tailwindcss.com) via `@tailwindcss/vite` — tokens live in `@theme` (see [BRANDING.md](./BRANDING.md)) |
 | Language | TypeScript (strict), alias `@` → `./src` |
 | ASR | [transformers.js](https://github.com/huggingface/transformers.js) — Whisper |
-| Translation | transformers.js — NLLB-200 |
+| Translation | transformers.js — OPUS-MT (Helsinki-NLP) |
 | Audio extraction | [`@ffmpeg/ffmpeg`](https://github.com/ffmpegwasm/ffmpeg.wasm) (WASM, single-thread) |
 | Video export | [mediabunny](https://mediabunny.dev) + WebCodecs, fallback canvas + `MediaRecorder` |
 | i18n | Astro native — `en` (default, `/`) + `es` (`/es/`) |
@@ -87,13 +87,13 @@ Built milestone by milestone (see [PROMPT.md](./PROMPT.md)):
 
 - [x] **1 — Scaffold:** static Astro + Tailwind v4 + TS + i18n + branded landing
 - [x] **2 — Stages + navigation:** the three stages mount and `stageManager` toggles them
-- [ ] **3 — Upload + audio extraction** (FFmpeg WASM in a worker, with progress)
-- [ ] **4 — ASR in a worker** (Whisper download + IndexedDB cache, WebGPU→WASM)
-- [ ] **5 — Editor + timeline + undo/redo + subtitle styles**
-- [ ] **6 — NLLB translation** when the output language differs
-- [ ] **7 — Export** `.srt` and burned-in MP4 (mediabunny + fallback)
-- [ ] **8 — Full en/es i18n, SEO/OG/hreflang, sitemap, client-side locale redirect**
-- [ ] **9 — Polish:** accessibility, error states, model-cache management, hero wave animation
+- [x] **3 — Upload + audio extraction** (FFmpeg WASM in a worker, with progress)
+- [x] **4 — ASR in a worker** (Whisper download + IndexedDB cache, WebGPU→WASM)
+- [x] **5 — Editor + timeline + undo/redo + subtitle styles**
+- [x] **6 — Local translation** when the output language differs
+- [x] **7 — Export** `.srt` and burned-in MP4 (mediabunny + fallback)
+- [x] **8 — Full en/es i18n, SEO/OG/hreflang, sitemap, client-side locale redirect**
+- [x] **9 — Polish:** accessibility, error states, model-cache management, hero wave animation
 
 ## Brand
 

@@ -5,10 +5,10 @@ Contexto persistente del proyecto. Claude Code lee este archivo automáticamente
 ## Qué es esto
 
 **Subwave**: app web de subtítulos que corre **100% en el navegador**. Transcribe con IA
-(Whisper), edita en una timeline, traduce (NLLB) y exporta `.srt` o vídeo con subtítulos
+(Whisper), edita en una timeline, traduce (OPUS-MT) y exporta `.srt` o vídeo con subtítulos
 quemados. **Sin backend, sin subidas, sin API keys.** La privacidad es un principio de diseño.
 
-Equivalente funcional a `subvid.app`, con identidad propia de **onda** (ver `BRANDING.md`).
+App de subtítulos con identidad propia de **onda** (ver `BRANDING.md`).
 
 ## Stack
 
@@ -17,7 +17,7 @@ Equivalente funcional a `subvid.app`, con identidad propia de **onda** (ver `BRA
 - **Tailwind CSS 4** vía `@tailwindcss/vite`. **No hay `tailwind.config`**: el tema vive en `@theme` dentro de `src/styles/global.css` (tokens en `BRANDING.md`).
 - **TypeScript** estricto. Alias `@` → `./src`.
 - **pnpm**. Node `>=22.12`.
-- **transformers.js** (`@huggingface/transformers`): Whisper (ASR) + NLLB-200 (traducción).
+- **transformers.js** (`@huggingface/transformers`): Whisper (ASR) + OPUS-MT (traducción, ligero).
 - **@ffmpeg/ffmpeg** (WASM, single-thread): extracción de audio.
 - **mediabunny** + WebCodecs: export de vídeo; fallback canvas + `MediaRecorder`.
 
@@ -36,7 +36,7 @@ SPA multi-etapa incrustada en páginas estáticas. Trabajo pesado en Web Workers
 
 - **Hilo principal**: UI, reproducción, timeline, orquestación FFmpeg, render de export.
 - **Worker de transcripción** (`transcriber.worker.ts`): Whisper, fuera del hilo principal.
-- **Worker de traducción** (`translation.worker.ts`): NLLB.
+- **Worker de traducción** (`translation.worker.ts`): OPUS-MT.
 - **`transformersClient.ts`**: capa que habla con ambos workers vía mensajes con `id`.
 - **Modelos**: se descargan de Hugging Face la 1ª vez (~150 MB) y se cachean en **IndexedDB**.
 - **Idioma**: redirección en cliente (script inline), no en servidor (es estático).
@@ -46,7 +46,7 @@ Etapas del usuario: **upload → config → editor → export**. `stageManager.t
 ## Marca (resumen; detalle en BRANDING.md)
 
 - Dos modos: **landing de papel** (Instrument Serif + Outfit, textura sutil) y **editor "agua profunda"** oscuro.
-- **Acento único: aqua `#2DE0CE`** (como el lima de subvid sobre su editor negro).
+- **Acento único: aqua `#2DE0CE`** sobre el editor oscuro.
 - Logo: **una onda con su sub-onda debajo**; motivo de waveform por toda la UI.
 - Fuentes: Instrument Serif (display) · Outfit (UI) · JetBrains Mono (timecodes).
 
@@ -72,7 +72,7 @@ Etapas del usuario: **upload → config → editor → export**. `stageManager.t
 
 Consúltalas **antes** de escribir código del área:
 
-- `browser-asr-transformers` — Whisper/NLLB en workers, protocolo de mensajes, WebGPU→WASM, IndexedDB.
+- `browser-asr-transformers` — Whisper/OPUS-MT en workers, protocolo de mensajes, WebGPU→WASM, IndexedDB.
 - `ffmpeg-wasm-audio` — extracción de audio con FFmpeg WASM (single-thread).
 - `webcodecs-video-export` — quemar subtítulos con WebCodecs/mediabunny y fallback a MediaRecorder.
 - `astro-static-i18n` — Astro estático + i18n + redirección en cliente + vercel.json.

@@ -1,4 +1,4 @@
-// Estilo del subtítulo: presets (estilo subvid) que se aplican en vivo al
+// Estilo del subtítulo: presets que se aplican en vivo al
 // overlay del preview y, más adelante, al export quemado.
 
 export type SubtitleFont = "sans" | "serif" | "mono";
@@ -38,7 +38,7 @@ export const defaultSubtitleStyle: SubtitleStyle = {
   animate: false,
 };
 
-// Presets con la misma forma que las "plantillas" de subvid.
+// Presets de estilo de subtítulo.
 export interface StylePreset {
   id: string;
   style: SubtitleStyle;
@@ -70,8 +70,7 @@ export function hexToRgba(hex: string, alpha: number): string {
 }
 
 /**
- * Estilo inline del "bocadillo" de texto del subtítulo en la preview. Igual que
- * subvid: el tamaño se acota con clamp(...,28px·size) para no desbordar en cajas
+ * Estilo inline del "bocadillo" de texto del subtítulo en la preview. El tamaño se acota con clamp(...,28px·size) para no desbordar en cajas
  * pequeñas (vídeo vertical), y las palabras largas se parten (overflow-wrap).
  */
 export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {

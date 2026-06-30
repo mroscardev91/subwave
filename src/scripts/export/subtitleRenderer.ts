@@ -12,7 +12,7 @@ const FONT_STACK: Record<SubtitleFont, string> = {
 };
 
 // Parte una palabra más ancha que maxWidth en trozos por caracteres (para que
-// una palabra larga nunca se salga del frame), como hace subvid.
+// una palabra larga nunca se salga del frame).
 function splitLongWord(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, word: string, maxWidth: number): string[] {
   if (ctx.measureText(word).width <= maxWidth) return [word];
   const chunks: string[] = [];
@@ -48,7 +48,7 @@ function wrap(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   return lines;
 }
 
-// Tamaño de fuente base = altura · 0.052 · size (modelo subvid). `size` es un
+// Tamaño de fuente base = altura · 0.052 · size. `size` es un
 // multiplicador (1 = 100%). MAX_LINES limita el subtítulo a 2 líneas: si no cabe,
 // se encoge la fuente hasta que entre (o hasta el mínimo).
 const FONT_HEIGHT_RATIO = 0.052;

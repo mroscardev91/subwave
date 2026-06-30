@@ -1,7 +1,7 @@
 # BRANDING.md — Subwave
 
 Identidad de **Subwave**: subtítulos con IA, 100% en el navegador. Del audio al texto.
-Inspirada en `subvid.app`: misma receta (landing de papel editorial + editor oscuro + un
+Receta: landing de papel editorial + editor oscuro + un
 único acento neón), llevada a un concepto de **onda/waveform** y a un acento **aqua**.
 
 ## Nombre y concepto
@@ -32,7 +32,7 @@ una onda y su "sub-onda". Eso es el logo.
 
 Clara y directa (sin palabros), cálida y de tú, honesta con la privacidad sin meter miedo,
 y con criterio técnico (tu usuario suele saber). Frases cortas, voz activa. Nada de "IA
-revolucionaria", "sin esfuerzo mágico" ni dark patterns. Igual que subvid: sobria y con gusto.
+revolucionaria", "sin esfuerzo mágico" ni dark patterns.
 
 ## Logo
 
@@ -51,11 +51,11 @@ revolucionaria", "sin esfuerzo mágico" ni dark patterns. Igual que subvid: sobr
 
 ## Color
 
-Dos modos, como subvid:
+Dos modos:
 
 - **Landing = papel editorial.** Fondo papel cálido-neutro, tinta casi negra, textura sutil.
 - **Editor = "agua profunda".** Casi negro azulado, superficies oscuras, y el **aqua** como
-  único color de marca que destaca (igual que el lima de subvid sobre su editor negro).
+  único color de marca que destaca.
 
 | Token | Hex | Uso |
 | --- | --- | --- |
@@ -75,7 +75,7 @@ Dos modos, como subvid:
 | `alert` | `#FF6B6B` | Errores / no soportado |
 
 Regla de oro: **un solo color de marca (aqua)**. La fuerza viene de la contención, igual que
-subvid con su lima. Aqua sobre "agua profunda" es el momento de marca.
+El aqua sobre "agua profunda" es el momento de marca.
 
 ### Tokens para `src/styles/global.css` (Tailwind v4)
 
@@ -106,13 +106,13 @@ subvid con su lima. Aqua sobre "agua profunda" es el momento de marca.
   --color-success:      #3DD68C;
   --color-alert:        #FF6B6B;
 
-  /* Tipografía (homenaje a subvid) */
+  /* Tipografía */
   --font-display: "Instrument Serif", ui-serif, Georgia, serif;
   --font-sans:    "Outfit", ui-sans-serif, system-ui, sans-serif;
   --font-mono:    "JetBrains Mono", ui-monospace, monospace;
 
   /* Forma */
-  --radius-card: 18px;          /* mismo radio que subvid */
+  --radius-card: 18px;
   --radius-pill: 999px;
   --shadow-soft: 0 4px 18px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.05);
 }
@@ -124,7 +124,7 @@ subvid con su lima. Aqua sobre "agua profunda" es el momento de marca.
     color: var(--color-ink);
     font-family: var(--font-sans);
   }
-  /* Textura de papel sutil en la landing (guiño a subvid) */
+  /* Textura de papel sutil en la landing */
   body.landing {
     background:
       radial-gradient(circle at 0% 0%, rgba(0,0,0,0.035), transparent 46%),
@@ -146,7 +146,7 @@ Genera utilidades: `bg-aqua`, `text-aqua`, `border-aqua`, `bg-deep`, `text-on-de
 
 ## Tipografía
 
-Mismo dúo editorial que subvid (por eso encaja la "inspiración"):
+Dúo tipográfico editorial:
 
 - **Display:** Instrument Serif (titulares, hero) — serif elegante con cursiva.
 - **UI / cuerpo:** Outfit (300–600) — sans geométrica limpia.
@@ -161,7 +161,7 @@ APP_NAME   = "Subwave"
 DOMAIN     = "subwave.app"   # ajusta a tu URL real (p. ej. subwave-app.vercel.app)
 TAGLINE_ES = "Del audio al texto. Subtítulos con IA en tu navegador, sin que tu vídeo salga de tu equipo."
 TAGLINE_EN = "From sound to subtitles. AI captions in your browser — your video never leaves your device."
-VIBE       = "Inspirado en subvid.app: landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico. Motivo de onda/waveform por toda la marca; el logo es una onda con su sub-onda debajo."
+VIBE       = "Landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico. Motivo de onda/waveform por toda la marca; el logo es una onda con su sub-onda debajo."
 ```
 
 ## Meta / OG (para `src/i18n/ui.ts`)

@@ -11,7 +11,7 @@ subtítulos que funciona **100% en el navegador**. Sin backend, sin subidas de a
 keys. El usuario sube un vídeo o audio, una IA local lo transcribe, lo edita en una línea de
 tiempo y exporta `.srt` o un vídeo con los subtítulos quemados.
 
-Es una reinterpretación funcionalmente equivalente a `subvid.app`, con **identidad visual propia**
+Es una app de subtítulos con **identidad visual propia**
 (ver `BRANDING.md`). El sitio es **estático** y se desplegará gratis en **Vercel**.
 
 ## Marca (ya definida — está en BRANDING.md)
@@ -21,7 +21,7 @@ APP_NAME   = "Subwave"
 DOMAIN     = "subwave.app"   # ajusta a tu URL real (p. ej. subwave-app.vercel.app)
 TAGLINE_ES = "Del audio al texto. Subtítulos con IA en tu navegador, sin que tu vídeo salga de tu equipo."
 TAGLINE_EN = "From sound to subtitles. AI captions in your browser — your video never leaves your device."
-VIBE       = "Inspirado en subvid.app: landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico (#2DE0CE). El logo es una onda con su sub-onda debajo; motivo de onda/waveform por toda la UI."
+VIBE       = "Landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico (#2DE0CE). El logo es una onda con su sub-onda debajo; motivo de onda/waveform por toda la UI."
 ```
 
 **Importante sobre la marca:**

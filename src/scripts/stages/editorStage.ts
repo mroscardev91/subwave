@@ -1,4 +1,4 @@
-// Editor (layout estilo subvid): preview centrado con overlay del subtítulo
+// Editor: preview centrado con overlay del subtítulo
 // activo, barra de reproducción propia, panel de tarjetas a la derecha
 // (play + tiempos + texto + borrar + añadir línea), presets de estilo y timeline
 // con el texto en los bloques. Undo/redo y estilo en vivo.
