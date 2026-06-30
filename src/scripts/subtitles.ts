@@ -8,22 +8,51 @@ export interface Segment {
   text: string;
 }
 
+// Límite de un subtítulo agrupado: hasta ~2 líneas y unos pocos segundos.
+const MAX_SEGMENT_CHARS = 84;
+const MAX_SEGMENT_SECONDS = 6;
+// Fin de frase (permite un cierre de comilla/paréntesis tras el signo).
+const SENTENCE_END = /[.!?…](["'»)\]]+)?$/;
+
 // Convierte la salida de Whisper (transformers.js) en segmentos. Con
-// return_timestamps:true viene `chunks: [{ timestamp: [start, end], text }]`.
+// return_timestamps:true viene `chunks: [{ timestamp: [start, end], text }]`,
+// que suelen ser trozos cortos; los agrupamos en FRASES (cortando en
+// puntuación de fin de frase, o al superar el límite de longitud/duración)
+// para no partir una frase a la mitad, como hace subvid.
 // `any` acotado a la frontera con la librería ML.
 export function segmentsFromAsr(output: any): Segment[] {
   const chunks = output?.chunks;
   if (Array.isArray(chunks) && chunks.length > 0) {
-    return chunks
-      .map((c: any, i: number) => {
-        const start = c?.timestamp?.[0] ?? 0;
-        // Whisper suele dar end=null en el último chunk; usa el inicio del
-        // siguiente para que el segmento tenga duración visible.
-        const next = chunks[i + 1]?.timestamp?.[0];
-        const end = c?.timestamp?.[1] ?? (typeof next === "number" ? next : start);
-        return { id: `seg-${i}`, start, end, text: String(c?.text ?? "").trim() };
-      })
-      .filter((s: Segment) => s.text.length > 0);
+    const segments: Segment[] = [];
+    let text = "";
+    let start: number | null = null;
+    let end = 0;
+
+    const flush = () => {
+      const t = text.trim();
+      if (t) segments.push({ id: `seg-${segments.length}`, start: start ?? 0, end, text: t });
+      text = "";
+      start = null;
+    };
+
+    for (let i = 0; i < chunks.length; i++) {
+      const c = chunks[i];
+      const cStart = c?.timestamp?.[0] ?? end;
+      // Whisper suele dar end=null en el último chunk; usa el inicio del
+      // siguiente para que el segmento tenga duración visible.
+      const next = chunks[i + 1]?.timestamp?.[0];
+      const cEnd = c?.timestamp?.[1] ?? (typeof next === "number" ? next : cStart);
+      if (start === null) start = cStart;
+      text += c?.text ?? "";
+      end = cEnd;
+
+      const t = text.trim();
+      if (SENTENCE_END.test(t) || t.length >= MAX_SEGMENT_CHARS || end - (start ?? 0) >= MAX_SEGMENT_SECONDS) {
+        flush();
+      }
+    }
+    flush();
+    return segments;
   }
   const text = String(output?.text ?? "").trim();
   return text ? [{ id: "seg-0", start: 0, end: 0, text }] : [];
