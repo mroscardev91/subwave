@@ -76,11 +76,13 @@
   font-size: 11px;
   line-height: 1.2;
   color: var(--color-on-deep);
-  background: color-mix(in oklab, var(--color-aqua) 24%, var(--color-deep-soft));
+  /* Translúcido (sobre transparent, no sobre deep-soft) para que la forma de
+     onda del fondo se vea a través del bloque. */
+  background: color-mix(in oklab, var(--color-aqua) 22%, transparent);
   border: 1px solid color-mix(in oklab, var(--color-aqua) 45%, transparent);
   transition: background 0.15s;
 }
-.timeline-block:hover { background: color-mix(in oklab, var(--color-aqua) 38%, var(--color-deep-soft)); }
+.timeline-block:hover { background: color-mix(in oklab, var(--color-aqua) 34%, transparent); }
 .timeline-block.is-active { background: color-mix(in oklab, var(--color-aqua) 72%, var(--color-deep-soft)); color: var(--color-deep); }
 .timeline-block.is-selected { border-color: var(--color-aqua); box-shadow: 0 0 0 1px var(--color-aqua); }
 .timeline-block:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }

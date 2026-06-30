@@ -77,12 +77,13 @@ export function renderWaveform(): void {
   // onda termina antes de cssW (no se estira para rellenar).
   const d = duration();
   const audioDur = audio.length / session.sampleRate;
-  ctx.fillStyle = "rgba(138, 147, 160, 0.35)"; // on-deep-soft atenuado
+  ctx.fillStyle = "rgba(151, 161, 176, 0.6)"; // on-deep-soft, visible sobre el fondo oscuro
   for (let x = 0; x < cssW; x++) {
     const t = (x / cssW) * d;
     if (t > audioDur) break;
     const amp = peaks[Math.min(PEAK_BUCKETS - 1, Math.floor((t / audioDur) * PEAK_BUCKETS))];
-    const h = Math.max(0.5, amp * maxBar);
+    // Escala perceptual (sqrt): realza el habla floja frente a los picos fuertes.
+    const h = Math.max(0.75, Math.sqrt(amp) * maxBar);
     ctx.fillRect(x, mid - h, 1, h * 2);
   }
 }
