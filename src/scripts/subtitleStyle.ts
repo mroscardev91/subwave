@@ -53,6 +53,12 @@ export const stylePresets: StylePreset[] = [
   { id: "neon", style: { ...base, color: "#2DE0CE", weight: 700, bgOpacity: 0 } },
   { id: "classic", style: { ...base, font: "serif", weight: 400, bgOpacity: 0.5 } },
   { id: "terminal", style: { ...base, font: "mono", weight: 500, color: "#3DD68C", bg: "#000000", bgOpacity: 0.75, outline: false } },
+  // Look vertical para Reels/Shorts: amarillo grande con contorno, sin caja.
+  { id: "reels", style: { ...base, color: "#FFE14D", weight: 700, size: 1.15, bgOpacity: 0, outline: true } },
+  // Identidad Subwave: caja aqua sólida con texto oscuro.
+  { id: "brand", style: { ...base, color: "#070B10", bg: "#2DE0CE", bgOpacity: 1, weight: 700, outline: false } },
+  // Karaoke de un clic: resalta la palabra que suena sobre texto limpio.
+  { id: "karaoke", style: { ...base, weight: 700, bgOpacity: 0, outline: true, animate: true } },
 ];
 
 const FONT_STACK: Record<SubtitleFont, string> = {

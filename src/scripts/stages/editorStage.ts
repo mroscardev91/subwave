@@ -527,6 +527,7 @@ function wirePresets(): void {
       session.style = { ...preset.style };
       applyStyle();
       applyStyleToControls();
+      updateOverlay(); // el preset puede activar/desactivar la animación (karaoke)
       segs.commitStyle();
     });
   }
