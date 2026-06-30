@@ -1,0 +1,85 @@
+---
+import { ui } from "@/i18n/ui";
+import type { Lang } from "@/i18n/locales";
+
+interface Props {
+  lang: Lang;
+}
+
+const { lang } = Astro.props;
+const d = ui[lang].client.downloads;
+---
+
+<div data-downloads class="dock">
+  <button type="button" data-downloads="toggle" aria-expanded="false" aria-label={d.aria} class="dock-badge">
+    <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path d="M5 12.5 10 17 19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+  </button>
+
+  <div data-downloads="panel" role="dialog" aria-label={d.aria} hidden class="dock-panel">
+    <div class="dock-head">
+      <span class="dock-title">{d.title}</span>
+      <span data-downloads="summary" class="dock-summary"></span>
+    </div>
+    <ul class="dock-list">
+      <li>
+        <span class="dock-model">{d.transcription}</span>
+        <span data-downloads="whisper" class="dock-size"></span>
+      </li>
+      <li>
+        <span class="dock-model">{d.translation}</span>
+        <span data-downloads="translation" class="dock-size"></span>
+      </li>
+    </ul>
+    <button type="button" data-downloads="clear" hidden class="dock-clear">{d.clear}</button>
+  </div>
+</div>
+
+<style>
+  .dock { position: relative; display: inline-flex; }
+  .dock-badge {
+    display: grid; place-items: center;
+    width: 2.4rem; height: 2.4rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in oklab, var(--color-on-deep-soft) 30%, transparent);
+    background: var(--color-deep-soft);
+    color: var(--color-on-deep-soft);
+    transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
+  }
+  .dock-badge:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 2px; }
+  /* Modelos en caché → verde "todo listo". */
+  .dock[data-state="ready"] .dock-badge {
+    color: var(--color-aqua);
+    border-color: var(--color-aqua);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-aqua) 18%, transparent);
+  }
+  .dock-panel {
+    position: absolute; right: 0; top: calc(100% + 0.6rem); z-index: 50;
+    width: 19rem; max-width: calc(100vw - 1.7rem);
+    border-radius: 16px;
+    border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 15%, transparent);
+    background: var(--color-deep-soft);
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    padding: 1rem;
+  }
+  .dock-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .dock-title { font: 600 0.7rem/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-on-deep-soft); }
+  .dock-summary { font: 500 0.8rem/1 var(--font-sans); color: var(--color-aqua); }
+  .dock-list { margin: 0.85rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .dock-list li {
+    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    border-radius: 10px; border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 12%, transparent);
+    background: var(--color-deep); padding: 0.6rem 0.75rem;
+  }
+  .dock-model { font: 500 0.85rem/1.2 var(--font-sans); color: var(--color-on-deep); }
+  .dock-size { font: 500 0.75rem/1 var(--font-mono); color: var(--color-on-deep-soft); white-space: nowrap; }
+  .dock-clear {
+    margin-top: 0.85rem; width: 100%;
+    border-radius: 999px; border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 25%, transparent);
+    background: transparent; color: var(--color-on-deep);
+    padding: 0.55rem 0.75rem; font-size: 0.8rem;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .dock-clear:hover { border-color: var(--color-on-deep); background: color-mix(in oklab, var(--color-on-deep-soft) 8%, transparent); }
+  .dock-clear:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+  .dock-clear:disabled { opacity: 0.5; }
+</style>

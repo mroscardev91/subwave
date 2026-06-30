@@ -19,7 +19,7 @@ export interface UIStrings {
     items: { title: string; body: string }[];
   };
   privacy: { title: string; body: string; points: string[] };
-  footer: { tagline: string; note: string; rights: string };
+  footer: { developedBy: string; with: string; code: string; sponsor: string; language: string };
   navLabel: string;
   langLabel: string;
   app: {
@@ -118,11 +118,15 @@ export interface UIStrings {
     };
     downloads: {
       title: string;
-      cached: string;
+      ready: string;
+      transcription: string;
+      translation: string;
+      pending: string;
       empty: string;
       clearing: string;
       cleared: string;
       clear: string;
+      aria: string;
     };
   };
 }
@@ -171,9 +175,11 @@ export const ui: Record<Lang, UIStrings> = {
       points: ["No uploads", "No servers", "No accounts", "No tracking"],
     },
     footer: {
-      tagline: "From sound to subtitles.",
-      note: "Your video stays put.",
-      rights: "Open, private, on-device.",
+      developedBy: "Built by",
+      with: "with",
+      code: "Code",
+      sponsor: "Sponsor",
+      language: "Language",
     },
     navLabel: "Primary",
     langLabel: "Language",
@@ -290,11 +296,15 @@ export const ui: Record<Lang, UIStrings> = {
       },
       downloads: {
         title: "AI models",
-        cached: "Downloaded and cached on this device",
-        empty: "Not downloaded yet (downloads on first use)",
+        ready: "All set",
+        transcription: "Transcription (Whisper)",
+        translation: "Translation",
+        pending: "Not downloaded",
+        empty: "No models downloaded yet",
         clearing: "Removing…",
         cleared: "Models removed",
-        clear: "Clear models",
+        clear: "Clear downloaded models",
+        aria: "Downloaded AI models",
       },
     },
   },
@@ -342,9 +352,11 @@ export const ui: Record<Lang, UIStrings> = {
       points: ["Sin subidas", "Sin servidores", "Sin cuentas", "Sin rastreo"],
     },
     footer: {
-      tagline: "Del audio al texto.",
-      note: "Tu vídeo se queda.",
-      rights: "Abierto, privado, en tu dispositivo.",
+      developedBy: "Desarrollado por",
+      with: "con",
+      code: "Código",
+      sponsor: "Patrocinar",
+      language: "Idioma",
     },
     navLabel: "Principal",
     langLabel: "Idioma",
@@ -461,11 +473,15 @@ export const ui: Record<Lang, UIStrings> = {
       },
       downloads: {
         title: "Modelos de IA",
-        cached: "Descargados y en caché en este dispositivo",
-        empty: "Aún no descargados (se descargan al primer uso)",
+        ready: "Todo listo",
+        transcription: "Transcripción (Whisper)",
+        translation: "Traducción",
+        pending: "No descargado",
+        empty: "Aún no hay modelos descargados",
         clearing: "Eliminando…",
         cleared: "Modelos eliminados",
-        clear: "Borrar modelos",
+        clear: "Eliminar modelos descargados",
+        aria: "Modelos de IA descargados",
       },
     },
   },

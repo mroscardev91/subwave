@@ -1,71 +1,91 @@
-// Panel de modelos: muestra si los modelos de IA están cacheados y su tamaño
-// aproximado, y permite borrarlos. transformers.js los guarda en la Cache API
-// (nombre "transformers-cache"); borrarlos solo obliga a re-descargarlos.
+// Panel de modelos (badge arriba a la derecha): muestra qué modelos de IA hay en
+// caché y su tamaño, y permite borrarlos. transformers.js los guarda en la Cache
+// API; borrarlos solo obliga a re-descargarlos al siguiente uso.
 
 const MODEL_CACHE_RE = /transformers|onnx|hugging|hf-/i;
 
-async function modelCacheKeys(): Promise<string[]> {
+function prettySize(bytes: number): string {
+  const mb = bytes / (1024 * 1024);
+  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+interface ModelSizes {
+  whisper: number;
+  translation: number;
+  total: number;
+}
+
+async function modelCacheNames(): Promise<string[]> {
   if (!("caches" in window)) return [];
   try {
-    const names = (await caches.keys()).filter((k) => MODEL_CACHE_RE.test(k));
-    // Solo cachés con contenido real: transformers.js crea la clave antes de
-    // guardar nada, así que una descarga abortada deja una caché vacía.
-    const withEntries: string[] = [];
-    for (const name of names) {
-      const cache = await caches.open(name);
-      if ((await cache.keys()).length) withEntries.push(name);
-    }
-    return withEntries;
+    return (await caches.keys()).filter((k) => MODEL_CACHE_RE.test(k));
   } catch {
     return [];
   }
 }
 
-async function usedMB(): Promise<number | null> {
-  try {
-    const est = await navigator.storage?.estimate?.();
-    return est?.usage ? Math.round(est.usage / (1024 * 1024)) : null;
-  } catch {
-    return null;
+// Suma los bytes en caché agrupados por modelo (a partir de la URL de cada
+// recurso). El tamaño viene de content-length o, si falta, del propio blob.
+async function modelSizes(): Promise<ModelSizes> {
+  const sizes: ModelSizes = { whisper: 0, translation: 0, total: 0 };
+  for (const name of await modelCacheNames()) {
+    const cache = await caches.open(name);
+    for (const req of await cache.keys()) {
+      const res = await cache.match(req);
+      if (!res) continue;
+      const len = Number(res.headers.get("content-length")) || (await res.clone().blob()).size;
+      sizes.total += len;
+      const url = req.url.toLowerCase();
+      if (url.includes("whisper")) sizes.whisper += len;
+      else if (/opus-mt|marian|nllb|translation/.test(url)) sizes.translation += len;
+    }
   }
+  return sizes;
 }
 
 export function initDownloads(): void {
-  const panel = document.querySelector<HTMLElement>("[data-downloads]");
-  if (!panel) return;
-  const statusEl = panel.querySelector<HTMLElement>('[data-downloads="status"]')!;
-  const clearBtn = panel.querySelector<HTMLButtonElement>('[data-downloads="clear"]')!;
-  const t = () => window.__I18N__.downloads;
+  const root = document.querySelector<HTMLElement>("[data-downloads]");
+  if (!root) return;
+  const toggle = root.querySelector<HTMLButtonElement>('[data-downloads="toggle"]')!;
+  const panel = root.querySelector<HTMLElement>('[data-downloads="panel"]')!;
+  const summary = root.querySelector<HTMLElement>('[data-downloads="summary"]')!;
+  const whisperEl = root.querySelector<HTMLElement>('[data-downloads="whisper"]')!;
+  const translationEl = root.querySelector<HTMLElement>('[data-downloads="translation"]')!;
+  const clearBtn = root.querySelector<HTMLButtonElement>('[data-downloads="clear"]')!;
+  const d = () => window.__I18N__.downloads;
 
   async function refresh(): Promise<void> {
-    const keys = await modelCacheKeys();
-    if (!keys.length) {
-      statusEl.textContent = t().empty;
-      clearBtn.hidden = true;
-      return;
-    }
-    const mb = await usedMB();
-    statusEl.textContent = mb ? `${t().cached} · ~${mb} MB` : t().cached;
-    clearBtn.hidden = false;
+    const s = await modelSizes();
+    whisperEl.textContent = s.whisper ? prettySize(s.whisper) : d().pending;
+    translationEl.textContent = s.translation ? prettySize(s.translation) : d().pending;
+    summary.textContent = s.total ? d().ready : d().empty;
+    root.dataset.state = s.total ? "ready" : "idle";
+    clearBtn.hidden = !s.total;
+    clearBtn.disabled = false;
+    clearBtn.textContent = s.total ? `${d().clear} (${prettySize(s.total)})` : d().clear;
   }
+
+  function open(show: boolean): void {
+    panel.hidden = !show;
+    toggle.setAttribute("aria-expanded", String(show));
+    if (show) void refresh();
+  }
+
+  toggle.addEventListener("click", () => open(panel.hidden));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !panel.hidden) open(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (!panel.hidden && !root.contains(e.target as Node)) open(false);
+  });
 
   clearBtn.addEventListener("click", async () => {
     clearBtn.disabled = true;
-    statusEl.textContent = t().clearing;
-    const keys = await modelCacheKeys();
-    await Promise.all(keys.map((k) => caches.delete(k)));
-    statusEl.textContent = t().cleared;
-    clearBtn.hidden = true;
-    clearBtn.disabled = false;
+    clearBtn.textContent = d().clearing;
+    await Promise.all((await modelCacheNames()).map((k) => caches.delete(k)));
+    await refresh();
+    summary.textContent = d().cleared;
   });
 
-  // Re-lee el estado cada vez que el panel reaparece (p. ej. al volver del editor
-  // tras descargar/borrar modelos en la misma sesión SPA), no solo al cargar.
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) void refresh();
-    }).observe(panel);
-  } else {
-    void refresh();
-  }
+  void refresh(); // estado inicial del badge (verde si ya hay modelos)
 }

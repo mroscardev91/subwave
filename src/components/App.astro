@@ -2,6 +2,7 @@
 import UploadStage from "@/components/UploadStage.astro";
 import ConfigStage from "@/components/ConfigStage.astro";
 import EditorStage from "@/components/EditorStage.astro";
+import StatusDock from "@/components/StatusDock.astro";
 import { ui } from "@/i18n/ui";
 import type { Lang } from "@/i18n/locales";
 
@@ -46,6 +47,7 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
           <span class="inline-block h-1.5 w-1.5 rounded-full bg-aqua" aria-hidden="true"></span>
           {a.privateChip}
         </span>
+        <StatusDock lang={lang} />
         <button type="button" data-action="home" class="rounded-pill border border-on-deep-soft/30 px-4 py-2 text-sm font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">{a.restart}</button>
       </div>
     </div>
