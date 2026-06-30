@@ -37,12 +37,21 @@ function setBusy(busy: boolean): void {
   qualitySel.disabled = busy;
 }
 
+// Resincroniza el estado (el botón de vídeo se deshabilita en sesiones de solo
+// audio). Se llama al entrar al editor, cuando ya se conoce session.kind.
+export function refreshExportControls(): void {
+  if (srtBtn) setBusy(false);
+}
+
 async function runVideo(): Promise<void> {
   if (exporting || session.kind !== "video" || !session.objectUrl || !session.file) return;
   const t = window.__I18N__.export;
   setBusy(true);
   statusEl.textContent = `${t.generating} 0%`;
+  let lastPct = 0;
   try {
+    // Asegura que Outfit esté cargada para el canvas del export (mismo reparto
+    // en líneas que la preview).
     if (document.fonts?.ready) await document.fonts.ready;
     const { blob, ext } = await exportVideo(
       { file: session.file, objectUrl: session.objectUrl },
@@ -50,7 +59,10 @@ async function runVideo(): Promise<void> {
       session.style,
       { format: formatSel.value as ExportFormat, quality: qualitySel.value as ExportQuality },
       (ratio) => {
-        statusEl.textContent = `${t.generating} ${Math.round(ratio * 100)}%`;
+        const pct = Math.round(ratio * 100);
+        if (pct === lastPct) return; // no inundar la región aria-live con el mismo %
+        lastPct = pct;
+        statusEl.textContent = `${t.generating} ${pct}%`;
       },
     );
     download(blob, `${baseName()}-${activeLang()}.${ext}`);
@@ -59,16 +71,17 @@ async function runVideo(): Promise<void> {
     statusEl.textContent = t.error;
   } finally {
     setBusy(false);
+    if (!videoBtn.disabled) videoBtn.focus(); // devuelve el foco tras el export
   }
 }
 
-export function initExportModal(): void {
-  srtBtn = document.querySelector('[data-export="srt"]')!;
+export function initExportControls(): void {
+  srtBtn = document.querySelector<HTMLButtonElement>('[data-export="srt"]')!;
   if (!srtBtn) return;
-  videoBtn = document.querySelector('[data-export="video"]')!;
-  formatSel = document.querySelector('[data-export="format"]')!;
-  qualitySel = document.querySelector('[data-export="quality"]')!;
-  statusEl = document.querySelector('[data-export="status"]')!;
+  videoBtn = document.querySelector<HTMLButtonElement>('[data-export="video"]')!;
+  formatSel = document.querySelector<HTMLSelectElement>('[data-export="format"]')!;
+  qualitySel = document.querySelector<HTMLSelectElement>('[data-export="quality"]')!;
+  statusEl = document.querySelector<HTMLElement>('[data-export="status"]')!;
 
   srtBtn.addEventListener("click", () => {
     download(new Blob([toSrt(session.segments)], { type: "text/plain;charset=utf-8" }), `${baseName()}-${activeLang()}.srt`);

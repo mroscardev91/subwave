@@ -12,6 +12,7 @@ import { translateSegments } from "@/scripts/translate";
 import { languageOptions, langLabel } from "@/scripts/languages";
 import { applyBubbleStyle, positionBubble, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
 import { fitSubtitle } from "@/scripts/export/subtitleRenderer";
+import { refreshExportControls } from "@/scripts/export/exportBar";
 
 const measureCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
 const measureCtx = measureCanvas?.getContext("2d") ?? null;
@@ -197,6 +198,7 @@ export function enterEditor(): void {
   bubbleSig = ""; // fuerza reconstruir el bocadillo
   setCustomPanel(false); // entra con la preview despejada
   mountMedia();
+  refreshExportControls(); // habilita/deshabilita "Descargar vídeo" según el tipo de medio
   renderTracks();
   applyStyle();
   applyStyleToControls();
