@@ -49,6 +49,7 @@ export function goTo(stage: StageName): void {
     else el.removeAttribute("aria-current");
   }
   current = stage;
+  refs.app.dataset.stage = stage; // permite ocultar el header global en el editor
   refs.stages.get(stage)!.querySelector<HTMLElement>("[data-stage-heading]")?.focus();
   window.scrollTo({ top: 0 });
 }

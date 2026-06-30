@@ -52,6 +52,10 @@
   }
   /* El editor invierte a "agua profunda" */
   body.editor { background: var(--color-deep); color: var(--color-on-deep); }
+  /* En el editor (etapa final) la app cabe en una pantalla, sin scroll: se
+     oculta el header global (logo + stepper) y manda la barra propia del editor,
+     como en subvid. */
+  #app[data-stage="editor"] > header { display: none; }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; }
@@ -82,3 +86,21 @@
 
 .seg-row.is-selected { border-color: var(--color-aqua); }
 .seg-row.is-active { background: color-mix(in oklab, var(--color-aqua) 16%, transparent); }
+
+/* Scroll fino y temático del panel de tarjetas (estilo subvid). */
+[data-editor="segments"] {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-on-deep-soft) 55%, transparent) transparent;
+}
+[data-editor="segments"]::-webkit-scrollbar { width: 10px; }
+[data-editor="segments"]::-webkit-scrollbar-track { background: transparent; }
+[data-editor="segments"]::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--color-on-deep-soft) 55%, transparent);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+[data-editor="segments"]::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--color-on-deep-soft) 72%, transparent);
+  background-clip: padding-box;
+}
