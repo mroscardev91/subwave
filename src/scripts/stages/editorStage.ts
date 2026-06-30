@@ -379,10 +379,16 @@ function wireStyleControls(): void {
     session.style.outline = (e.target as HTMLInputElement).checked;
     applyStyle();
   });
+  // Cada control registra en el historial al CONFIRMAR (change), no en cada input
+  // intermedio, para no inundar el undo. font/outline ya disparan change.
+  for (const name of ["font", "size", "color", "bg", "bgOpacity", "outline"]) {
+    styleEl(name).addEventListener("change", () => segs.commitStyle());
+  }
   for (const btn of stage.querySelectorAll<HTMLButtonElement>("[data-pos]")) {
     btn.addEventListener("click", () => {
       session.style.position = btn.dataset.pos as SubtitlePosition;
       applyStyle();
+      segs.commitStyle();
     });
   }
   initBubbleDrag();
@@ -409,6 +415,7 @@ function initBubbleDrag(): void {
     const b = bubble.getBoundingClientRect();
     const offY = e.clientY - (b.top + b.height / 2);
     let done = false;
+    let moved = false;
     vguide.hidden = false; // eje Y visible al arrastrar
     try {
       bubble.setPointerCapture(e.pointerId);
@@ -416,6 +423,7 @@ function initBubbleDrag(): void {
       /* sin captura igual funciona dentro de la ventana */
     }
     const onMove = (ev: PointerEvent) => {
+      moved = true;
       bubble.style.cursor = "grabbing";
       const cy = ev.clientY - offY;
       session.style.position = "custom";
@@ -433,6 +441,7 @@ function initBubbleDrag(): void {
       bubble.removeEventListener("pointerup", finish);
       bubble.removeEventListener("pointercancel", finish);
       refreshPresetChips();
+      if (moved) segs.commitStyle(); // registra la nueva posición en el historial
     };
     bubble.addEventListener("pointermove", onMove);
     bubble.addEventListener("pointerup", finish);
@@ -457,6 +466,7 @@ function wirePresets(): void {
       session.style = { ...preset.style };
       applyStyle();
       applyStyleToControls();
+      segs.commitStyle();
     });
   }
 }
@@ -662,20 +672,23 @@ function doUndo(): void {
   const snap = history.undo();
   if (!snap) return;
   segs.applySnapshot(snap);
-  renderList();
-  timeline.renderBlocks();
-  applyStyleToControls();
-  updateOverlay();
-  focusAfterHistory();
+  restoreSnapshot();
 }
 
 function doRedo(): void {
   const snap = history.redo();
   if (!snap) return;
   segs.applySnapshot(snap);
+  restoreSnapshot();
+}
+
+// Re-pinta tras deshacer/rehacer: el snapshot ya está aplicado en applySnapshot;
+// aquí se refresca la UI (lista, timeline, estilo del subtítulo y controles).
+function restoreSnapshot(): void {
+  applyStyle(); // re-aplica el estilo restaurado al bocadillo/overlay
+  applyStyleToControls();
   renderList();
   timeline.renderBlocks();
-  applyStyleToControls();
   updateOverlay();
   focusAfterHistory();
 }

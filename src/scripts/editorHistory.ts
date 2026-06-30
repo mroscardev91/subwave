@@ -1,27 +1,34 @@
-// Historial undo/redo para los segmentos. Guarda instantáneas (copias) de la
-// lista; la cima de `past` es siempre el estado actual.
+// Historial undo/redo del editor. Guarda instantáneas (copias) del estado
+// editable: los segmentos de la pista activa y el estilo del subtítulo. La cima
+// de `past` es siempre el estado actual.
 
 import type { Segment } from "@/scripts/subtitles";
+import type { SubtitleStyle } from "@/scripts/subtitleStyle";
+
+export interface EditorSnapshot {
+  segments: Segment[];
+  style: SubtitleStyle;
+}
 
 const MAX = 100;
-let past: Segment[][] = [];
-let future: Segment[][] = [];
+let past: EditorSnapshot[] = [];
+let future: EditorSnapshot[] = [];
 const listeners: (() => void)[] = [];
 
-function clone(segs: Segment[]): Segment[] {
-  return segs.map((s) => ({ ...s }));
+function clone(s: EditorSnapshot): EditorSnapshot {
+  return { segments: s.segments.map((seg) => ({ ...seg })), style: { ...s.style } };
 }
 
 /** Inicializa el historial con el estado base (tras transcribir). */
-export function reset(segs: Segment[]): void {
-  past = [clone(segs)];
+export function reset(snap: EditorSnapshot): void {
+  past = [clone(snap)];
   future = [];
   notify();
 }
 
 /** Registra una nueva instantánea tras una edición. */
-export function record(segs: Segment[]): void {
-  past.push(clone(segs));
+export function record(snap: EditorSnapshot): void {
+  past.push(clone(snap));
   if (past.length > MAX) past.shift();
   future = [];
   notify();
@@ -34,14 +41,14 @@ export function canRedo(): boolean {
   return future.length > 0;
 }
 
-export function undo(): Segment[] | null {
+export function undo(): EditorSnapshot | null {
   if (past.length <= 1) return null;
   future.push(past.pop()!);
   notify();
   return clone(past[past.length - 1]);
 }
 
-export function redo(): Segment[] | null {
+export function redo(): EditorSnapshot | null {
   const next = future.pop();
   if (!next) return null;
   past.push(next);

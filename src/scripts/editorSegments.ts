@@ -5,13 +5,23 @@
 import { session } from "@/scripts/session";
 import { segmentAt as findSegmentAt, type Segment } from "@/scripts/subtitles";
 import * as history from "@/scripts/editorHistory";
+import type { EditorSnapshot } from "@/scripts/editorHistory";
 
 let selectedId: string | null = null;
 const listeners: (() => void)[] = [];
 
+function snapshot(): EditorSnapshot {
+  return { segments: session.segments, style: session.style };
+}
+
 export function init(): void {
-  history.reset(session.segments);
+  history.reset(snapshot());
   selectedId = session.segments[0]?.id ?? null;
+}
+
+/** Registra el estado actual (segmentos + estilo) tras un cambio de estilo. */
+export function commitStyle(): void {
+  history.record(snapshot());
 }
 
 export function getSelectedId(): string | null {
@@ -36,7 +46,7 @@ export function setText(id: string, text: string): void {
 
 /** Registra una instantánea del estado actual (al confirmar una edición). */
 export function commit(): void {
-  history.record(session.segments);
+  history.record(snapshot());
 }
 
 export function updateTiming(id: string, start: number, end: number): void {
@@ -45,7 +55,7 @@ export function updateTiming(id: string, start: number, end: number): void {
   // No negativos y end >= start; bajar end por debajo de start NO arrastra start.
   seg.start = Math.max(0, start);
   seg.end = Math.max(seg.start, end);
-  history.record(session.segments);
+  history.record(snapshot());
   emit();
 }
 
@@ -59,7 +69,7 @@ export function addSegment(): string {
   const seg = { id: `seg-new-${++counter}`, start, end: start + 2, text: "" };
   session.segments.splice(idx + 1, 0, seg);
   selectedId = seg.id;
-  history.record(session.segments);
+  history.record(snapshot());
   emit();
   return seg.id;
 }
@@ -71,14 +81,16 @@ export function removeSegment(id: string): void {
   if (selectedId === id) {
     selectedId = session.segments[Math.min(idx, session.segments.length - 1)]?.id ?? null;
   }
-  history.record(session.segments);
+  history.record(snapshot());
   emit();
 }
 
-/** Reemplaza los segmentos de la pista activa (al deshacer/rehacer). */
-export function applySnapshot(segs: Segment[]): void {
+/** Restaura segmentos de la pista activa + estilo (al deshacer/rehacer). */
+export function applySnapshot(snap: EditorSnapshot): void {
+  const segs = snap.segments;
   session.segments = segs;
   if (session.tracks[session.activeTrack]) session.tracks[session.activeTrack].segments = segs;
+  session.style = snap.style;
   if (selectedId && !segs.some((s) => s.id === selectedId)) {
     selectedId = segs[0]?.id ?? null;
   }
