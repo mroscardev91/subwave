@@ -2,15 +2,25 @@
 
 **From sound to subtitles — AI captions that never leave your browser.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-2DE0CE.svg)](./LICENSE)
+[![Live demo](https://img.shields.io/badge/Live%20demo-subwave.pro-2DE0CE.svg)](https://subwave.pro)
+[![CI](https://github.com/mroscardev91/subwave/actions/workflows/ci.yml/badge.svg)](https://github.com/mroscardev91/subwave/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-15B5A6.svg)](./LICENSE)
 [![Built with Astro](https://img.shields.io/badge/Built%20with-Astro-15B5A6.svg)](https://astro.build)
 [![100% client-side](https://img.shields.io/badge/Backend-none-070B10.svg)](#privacy-is-the-architecture)
+
+### ▶ [Try Subwave live → subwave.pro](https://subwave.pro)
+
+![Subwave](./public/og.png)
 
 Subwave generates, edits and translates subtitles for any video or audio file **entirely in your browser**. A local Whisper model transcribes the speech, you fine-tune the timing on a timeline, optionally translate locally, and export an `.srt` or a video with burned-in captions.
 
 No backend. No uploads. No API keys. No accounts. Your file never leaves your device — and you can verify it in the Network tab.
 
 > A privacy-first, open-source take on browser subtitling, with its own **wave** identity.
+
+<!-- TODO(portfolio): add a real UI capture of the editor (timeline + waveform +
+     styled subtitle) at docs/editor.png and a short upload→transcribe→edit→export
+     GIF at docs/demo.gif, then embed them here. The card above is the brand OG. -->
 
 ---
 
