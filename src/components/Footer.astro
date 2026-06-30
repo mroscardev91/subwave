@@ -22,16 +22,20 @@ const c =
         accent: "text-aqua",
         ring: "focus-visible:ring-aqua",
         linkHover: "hover:text-on-deep",
-        activeLang: "text-aqua",
+        // Aqua sobre oscuro cumple contraste; subrayado + peso como señal extra.
+        activeLang: "text-aqua font-semibold underline underline-offset-4",
       }
     : {
         border: "border-line",
         base: "text-ink-soft",
-        strong: "text-ink hover:text-aqua-deep",
+        // En papel, aqua-deep como TEXTO no cumple WCAG AA (2.32:1): mantén ink y
+        // marca el hover con subrayado, no con color.
+        strong: "text-ink hover:underline",
         accent: "text-aqua-deep",
         ring: "focus-visible:ring-ink",
         linkHover: "hover:text-ink",
-        activeLang: "text-aqua-deep",
+        // Activo en papel: ink (contraste pleno) + señal no-cromática.
+        activeLang: "text-ink font-semibold underline underline-offset-4",
       };
 const link = `inline-flex items-center gap-1.5 rounded-pill px-1 ${c.base} transition ${c.linkHover} focus-visible:outline-none focus-visible:ring-2 ${c.ring}`;
 ---

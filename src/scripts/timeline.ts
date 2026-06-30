@@ -275,7 +275,9 @@ export function updateBlockText(id: string, text: string): void {
   if (!refs) return;
   const block = refs.blocks.querySelector<HTMLElement>(`.timeline-block[data-seg-id="${id}"]`);
   if (!block) return;
-  const label = text || "";
+  // Mismo fallback que renderBlocks: un bloque enfocable nunca queda sin nombre.
+  const start = session.segments.find((s) => s.id === id)?.start ?? 0;
+  const label = text || formatTimecode(start);
   const txt = block.querySelector<HTMLElement>(".tl-text");
   if (txt) txt.textContent = text;
   block.title = label;

@@ -21,6 +21,7 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
 ---
 
 <div id="app" hidden class="flex min-h-screen flex-col bg-deep text-on-deep">
+  <h1 class="sr-only">Subwave</h1>
   <header class="sticky top-0 z-10 border-b border-on-deep-soft/15 bg-deep/85 backdrop-blur">
     <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3.5">
       <button type="button" data-action="home" aria-label="Subwave" class="flex items-center gap-2.5 rounded-pill focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
@@ -54,7 +55,7 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
     </div>
   </header>
 
-  <main class="flex-1">
+  <main id="main-content" class="flex-1">
     <UploadStage lang={lang} />
     <ConfigStage lang={lang} />
     <EditorStage lang={lang} />

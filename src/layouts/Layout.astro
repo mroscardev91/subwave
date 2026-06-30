@@ -103,6 +103,7 @@ const jsonLd = {
   </head>
 
   <body class={bodyClass}>
+    <a href="#main-content" class="skip-link">{lang === "es" ? "Saltar al contenido" : "Skip to content"}</a>
     <slot />
 
     {/* Persist explicit locale choice so the redirect above won't override it. */}

@@ -51,10 +51,10 @@ const accept =
     <!-- Progress -->
     <div data-upload="progress" hidden class="mt-5">
       <div class="flex items-center justify-between text-sm text-on-deep-soft">
-        <span data-upload="status" aria-live="polite"></span>
+        <span id="upload-status" data-upload="status" aria-live="polite"></span>
         <span data-upload="pct" class="font-mono"></span>
       </div>
-      <div data-upload="bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="mt-2 h-2 overflow-hidden rounded-pill bg-deep">
+      <div data-upload="bar-track" role="progressbar" aria-labelledby="upload-status" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="mt-2 h-2 overflow-hidden rounded-pill bg-deep">
         <div data-upload="bar" class="h-full rounded-pill bg-aqua transition-[width] duration-200" style="width:0%"></div>
       </div>
     </div>

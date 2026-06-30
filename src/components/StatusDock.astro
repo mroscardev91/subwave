@@ -11,11 +11,11 @@ const d = ui[lang].client.downloads;
 ---
 
 <div data-downloads class="dock">
-  <button type="button" data-downloads="toggle" aria-expanded="false" aria-label={d.aria} class="dock-badge">
+  <button type="button" data-downloads="toggle" aria-expanded="false" aria-controls="downloads-panel" aria-label={d.aria} class="dock-badge">
     <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path d="M5 12.5 10 17 19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
   </button>
 
-  <div data-downloads="panel" role="dialog" aria-label={d.aria} hidden class="dock-panel">
+  <div id="downloads-panel" data-downloads="panel" role="group" aria-label={d.aria} hidden class="dock-panel">
     <div class="dock-head">
       <span class="dock-title">{d.title}</span>
       <span data-downloads="summary" class="dock-summary"></span>

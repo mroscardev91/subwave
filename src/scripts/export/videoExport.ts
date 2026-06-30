@@ -48,7 +48,8 @@ export async function exportVideo(
     try {
       const { exportMp4 } = await import("@/scripts/export/videoExportMp4");
       return await exportMp4(source.file, segments, style, opts.quality, onProgress);
-    } catch {
+    } catch (err) {
+      console.warn("[export] MP4 (WebCodecs) falló; se cae a WebM:", err);
       onProgress(0);
     }
   }
@@ -65,7 +66,7 @@ async function exportWebm(
 ): Promise<VideoExportResult> {
   const video = document.createElement("video");
   video.src = objectUrl;
-  video.muted = false;
+  video.muted = false; // necesario: un elemento muteado no emite audio por Web Audio
   video.crossOrigin = "anonymous";
   await new Promise<void>((resolve, reject) => {
     video.onloadedmetadata = () => resolve();
@@ -80,14 +81,19 @@ async function exportWebm(
   const ctx = canvas.getContext("2d")!;
 
   const stream = canvas.captureStream();
-  // Conserva el audio original.
-  const withCapture = video as HTMLVideoElement & {
-    captureStream?: () => MediaStream;
-    mozCaptureStream?: () => MediaStream;
-  };
-  const srcStream = withCapture.captureStream?.() ?? withCapture.mozCaptureStream?.();
-  if (srcStream) {
-    for (const track of srcStream.getAudioTracks()) stream.addTrack(track);
+  // Captura el audio original SIN reproducirlo por los altavoces: el elemento se
+  // enruta por Web Audio a un MediaStreamDestination y NO a la salida por
+  // defecto, así que se graba en silencio (en lugar de sonar todo el clip).
+  let audioCtx: AudioContext | null = null;
+  try {
+    audioCtx = new AudioContext();
+    await audioCtx.resume();
+    const srcNode = audioCtx.createMediaElementSource(video);
+    const dest = audioCtx.createMediaStreamDestination();
+    srcNode.connect(dest);
+    for (const track of dest.stream.getAudioTracks()) stream.addTrack(track);
+  } catch {
+    /* sin audio (p. ej. el vídeo no trae pista): se graba solo vídeo */
   }
 
   const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
@@ -124,6 +130,7 @@ async function exportWebm(
   requestAnimationFrame(draw);
 
   const blob = await finished;
+  void audioCtx?.close();
   onProgress(1);
   return { blob, ext: "webm" };
 }
