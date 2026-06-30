@@ -29,7 +29,6 @@ export async function exportMp4(
   file: Blob,
   segments: Segment[],
   style: SubtitleStyle,
-  refHeight: number,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -68,7 +67,7 @@ export async function exportMp4(
     for await (const frame of sink.canvases()) {
       ctx.drawImage(frame.canvas, 0, 0, width, height);
       const seg = segmentAt(segments, frame.timestamp);
-      drawSubtitle(ctx, seg?.text ?? "", style, width, height, refHeight);
+      drawSubtitle(ctx, seg?.text ?? "", style, width, height);
       await videoSource.add(frame.timestamp, frame.duration);
       onProgress(Math.min(0.99, frame.timestamp / duration));
     }

@@ -142,6 +142,7 @@ export function initEditorStage(): void {
 // del frame y con el mismo recorte/posición que la exportación. Para audio (sin
 // frame) cubre todo el preview.
 function layoutOverlay(): void {
+  let boxH: number;
   if (media === video && !video.hidden && video.videoWidth && video.videoHeight) {
     const cW = previewEl.clientWidth;
     const cH = previewEl.clientHeight;
@@ -157,13 +158,17 @@ function layoutOverlay(): void {
     overlay.style.width = `${Math.round(w)}px`;
     overlay.style.height = `${Math.round(h)}px`;
     overlay.style.padding = `${Math.max(4, Math.round(h * 0.06))}px`;
+    boxH = h;
   } else {
     overlay.style.left = "0";
     overlay.style.top = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
     overlay.style.padding = "1.5rem";
+    boxH = previewEl.clientHeight;
   }
+  // Misma fórmula que el export (altura · 0.052 · size): WYSIWYG.
+  if (boxH > 0) bubble.style.fontSize = `${Math.max(8, Math.round(boxH * 0.052 * session.style.size))}px`;
 }
 
 export function enterEditor(): void {
@@ -370,6 +375,7 @@ function applyStyleToControls(): void {
 
 function applyStyle(): void {
   applyBubbleStyle(bubble, session.style);
+  layoutOverlay(); // recalcula el tamaño de fuente del bocadillo según el size
   overlay.style.alignItems = positionToAlign(session.style.position);
   // refleja el preset activo en los chips sin re-set de los controles finos
   const active = activePresetId();

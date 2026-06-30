@@ -60,15 +60,6 @@ function close(): void {
   lastFocus?.focus();
 }
 
-// Altura (px) del frame mostrado en la preview del editor, para que el subtítulo
-// quemado quede en la misma proporción que el bocadillo de la preview.
-function previewRefHeight(): number {
-  const v = document.querySelector<HTMLVideoElement>('[data-editor="video"]');
-  if (!v || !v.videoWidth || !v.videoHeight || !v.clientHeight) return 360;
-  const ar = v.videoWidth / v.videoHeight;
-  return Math.round(Math.min(v.clientHeight, v.clientWidth / ar)) || 360;
-}
-
 function setBar(ratio: number): void {
   const pct = Math.round(ratio * 100);
   bar.style.width = `${pct}%`;
@@ -93,7 +84,6 @@ async function runVideo(): Promise<void> {
       { file: session.file, objectUrl: session.objectUrl },
       session.segments,
       session.style,
-      previewRefHeight(),
       setBar,
     );
     download(blob, `${baseName()}-${activeLang()}.${ext}`);

@@ -7,7 +7,7 @@ export type SubtitlePosition = "top" | "middle" | "bottom";
 export interface SubtitleStyle {
   font: SubtitleFont;
   weight: number; // 400..700
-  size: number; // px (relativo al preview)
+  size: number; // multiplicador del tamaño (1 = 100%); rango 0.7..1.6
   color: string; // hex del texto
   bg: string; // hex del fondo
   bgOpacity: number; // 0..1
@@ -15,10 +15,13 @@ export interface SubtitleStyle {
   position: SubtitlePosition;
 }
 
+export const SIZE_MIN = 0.7;
+export const SIZE_MAX = 1.6;
+
 export const defaultSubtitleStyle: SubtitleStyle = {
   font: "sans",
   weight: 600,
-  size: 28,
+  size: 1,
   color: "#FFFFFF",
   bg: "#000000",
   bgOpacity: 0.55,
@@ -36,7 +39,7 @@ const base = defaultSubtitleStyle;
 export const stylePresets: StylePreset[] = [
   { id: "base", style: { ...base } },
   { id: "clean", style: { ...base, bgOpacity: 0, weight: 600 } },
-  { id: "bold", style: { ...base, weight: 700, size: 32 } },
+  { id: "bold", style: { ...base, weight: 700, size: 1.12 } },
   { id: "pop", style: { ...base, color: "#FFE14D", weight: 700, bg: "#000000", bgOpacity: 0.65 } },
   { id: "neon", style: { ...base, color: "#2DE0CE", weight: 700, bgOpacity: 0 } },
   { id: "classic", style: { ...base, font: "serif", weight: 400, bgOpacity: 0.5 } },
@@ -57,15 +60,19 @@ export function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-/** Estilo inline del "bocadillo" de texto del subtítulo. */
+/**
+ * Estilo inline del "bocadillo" de texto del subtítulo. NO fija el tamaño de
+ * fuente: lo calcula el editor a partir de la altura del frame mostrado
+ * (altura · 0.052 · size) para que coincida con la exportación.
+ */
 export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
   el.style.fontFamily = FONT_STACK[style.font];
   el.style.fontWeight = String(style.weight);
-  el.style.fontSize = `${style.size}px`;
   el.style.color = style.color;
   el.style.backgroundColor = style.bgOpacity > 0 ? hexToRgba(style.bg, style.bgOpacity) : "transparent";
-  el.style.padding = style.bgOpacity > 0 ? "0.15em 0.5em" : "0";
-  el.style.textShadow = style.outline
+  el.style.padding = style.bgOpacity > 0 ? "0.3em 0.5em" : "0";
+  el.style.borderRadius = "0.18em";
+  el.style.textShadow = style.outline && style.bgOpacity === 0
     ? "0 1px 2px rgba(0,0,0,0.95), 0 0 4px rgba(0,0,0,0.9)"
     : "none";
 }

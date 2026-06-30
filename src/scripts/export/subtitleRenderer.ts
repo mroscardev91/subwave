@@ -28,11 +28,15 @@ function wrap(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   return lines;
 }
 
+// Proporción del tamaño de fuente respecto a la altura del frame (modelo subvid:
+// fontPx = altura · 0.052 · size). `size` es un multiplicador (1 = 100%).
+const FONT_HEIGHT_RATIO = 0.052;
+const MAX_WIDTH_RATIO = 0.8;
+
 /**
  * Pinta el subtítulo activo (puede ser "") en el contexto del canvas del vídeo.
- * `refHeight` es la altura (px) del frame mostrado en la preview del editor: al
- * escalar la fuente con `height / refHeight`, el subtítulo quemado queda en la
- * misma proporción que el bocadillo de la preview ("lo que ves es lo que exportas").
+ * La fuente se escala con la altura del frame (igual que la preview del editor),
+ * así "lo que ves es lo que exportas" y el texto nunca se sale del frame.
  */
 export function drawSubtitle(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -40,49 +44,72 @@ export function drawSubtitle(
   style: SubtitleStyle,
   width: number,
   height: number,
-  refHeight: number,
 ): void {
   if (!text.trim()) return;
 
-  const fontPx = Math.round(style.size * (height / refHeight));
-  const lineHeight = Math.round(fontPx * 1.25);
-  const padX = Math.round(fontPx * 0.5);
-  const padY = Math.round(fontPx * 0.18);
-  const margin = Math.round(height * 0.06);
+  const fontPx = Math.round(height * FONT_HEIGHT_RATIO * style.size);
+  const lineHeight = fontPx * 1.28;
+  const padX = fontPx * 0.5;
+  const padY = fontPx * 0.3;
 
   ctx.font = `${style.weight} ${fontPx}px ${FONT_STACK[style.font]}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
 
-  const maxWidth = width * 0.9;
-  const lines = wrap(ctx, text.trim(), maxWidth - padX * 2);
+  const maxBlockW = width * MAX_WIDTH_RATIO;
+  const maxTextW = Math.max(fontPx, maxBlockW - padX * 2);
+  const lines = wrap(ctx, text.trim(), maxTextW);
   const blockH = lines.length * lineHeight;
 
-  let top: number;
-  if (style.position === "top") top = margin;
-  else if (style.position === "middle") top = (height - blockH) / 2;
-  else top = height - margin - blockH;
+  // Baseline de la primera línea según la posición; en "bottom" el bloque crece
+  // hacia arriba desde el margen inferior (6%), así nunca rebasa el frame.
+  let baseTop: number;
+  if (style.position === "top") baseTop = height * 0.08 + fontPx;
+  else if (style.position === "middle") baseTop = (height - blockH) / 2 + fontPx;
+  else baseTop = height - height * 0.06 - (lines.length - 1) * lineHeight;
 
   const cx = width / 2;
 
-  // Un único fondo para todo el bloque (como el bocadillo de la preview): evita
-  // que los rects por línea se solapen y dupliquen el alfa entre líneas.
+  // Un único fondo para todo el bloque (como el bocadillo de la preview).
   if (style.bgOpacity > 0) {
-    const maxW = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const widest = Math.max(...lines.map((l) => ctx.measureText(l).width));
+    const boxW = Math.min(maxBlockW, widest + padX * 2);
+    const boxY = baseTop - fontPx - padY / 2;
+    const boxH = blockH + padY;
+    const r = fontPx * 0.18;
     ctx.fillStyle = hexToRgba(style.bg, style.bgOpacity);
-    ctx.fillRect(cx - maxW / 2 - padX, top - padY, maxW + padX * 2, blockH + padY * 2);
+    roundRect(ctx, cx - boxW / 2, boxY, boxW, boxH, r);
+    ctx.fill();
   }
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    const baseline = top + i * lineHeight + fontPx;
-    if (style.outline) {
+    const baseline = baseTop + i * lineHeight;
+    if (style.outline && style.bgOpacity === 0) {
       ctx.lineJoin = "round";
-      ctx.strokeStyle = "rgba(0,0,0,0.95)";
-      ctx.lineWidth = Math.max(2, fontPx * 0.12);
+      ctx.strokeStyle = "rgba(0,0,0,0.9)";
+      ctx.lineWidth = Math.max(2, fontPx * 0.14);
       ctx.strokeText(line, cx, baseline);
     }
     ctx.fillStyle = style.color;
     ctx.fillText(line, cx, baseline);
   }
+}
+
+function roundRect(
+  ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
 }

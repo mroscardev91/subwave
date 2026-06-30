@@ -26,20 +26,19 @@ export async function exportVideo(
   source: VideoExportSource,
   segments: Segment[],
   style: SubtitleStyle,
-  refHeight: number,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
   if (hasWebCodecs) {
     try {
       const { exportMp4 } = await import("@/scripts/export/videoExportMp4");
-      return await exportMp4(source.file, segments, style, refHeight, onProgress);
+      return await exportMp4(source.file, segments, style, onProgress);
     } catch {
       // WebCodecs presente pero el camino MP4 falló (códec no encodable, etc.):
       // cae al fallback universal.
       onProgress(0);
     }
   }
-  return exportWebm(source.objectUrl, segments, style, refHeight, onProgress);
+  return exportWebm(source.objectUrl, segments, style, onProgress);
 }
 
 // Camino B — canvas + MediaRecorder → WebM.
@@ -47,7 +46,6 @@ async function exportWebm(
   objectUrl: string,
   segments: Segment[],
   style: SubtitleStyle,
-  refHeight: number,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
   const video = document.createElement("video");
@@ -100,7 +98,7 @@ async function exportWebm(
   const draw = () => {
     ctx.drawImage(video, 0, 0, width, height);
     const seg = segmentAt(segments, video.currentTime);
-    drawSubtitle(ctx, seg?.text ?? "", style, width, height, refHeight);
+    drawSubtitle(ctx, seg?.text ?? "", style, width, height);
     onProgress(Math.min(1, video.currentTime / duration));
     if (video.ended) {
       if (recorder.state !== "inactive") recorder.stop();
