@@ -1,8 +1,8 @@
 # BRANDING.md — Subwave
 
 Identidad de **Subwave**: subtítulos con IA, 100% en el navegador. Del audio al texto.
-Receta: landing de papel editorial + editor oscuro + un
-único acento neón), llevada a un concepto de **onda/waveform** y a un acento **aqua**.
+Receta: landing de papel editorial + editor oscuro + un único acento **aqua**,
+sobre un concepto de **onda/waveform** que recorre toda la interfaz.
 
 ## Nombre y concepto
 
@@ -74,8 +74,8 @@ Dos modos:
 | `success` | `#3DD68C` | Estado "listo" |
 | `alert` | `#FF6B6B` | Errores / no soportado |
 
-Regla de oro: **un solo color de marca (aqua)**. La fuerza viene de la contención, igual que
-El aqua sobre "agua profunda" es el momento de marca.
+Regla de oro: **un solo color de marca (aqua)**. La fuerza viene de la contención:
+el aqua sobre "agua profunda" es el momento de marca.
 
 ### Tokens para `src/styles/global.css` (Tailwind v4)
 
@@ -164,13 +164,16 @@ TAGLINE_EN = "From sound to subtitles. AI captions in your browser — your vide
 VIBE       = "Landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico. Motivo de onda/waveform por toda la marca; el logo es una onda con su sub-onda debajo."
 ```
 
-## Meta / OG (para `src/i18n/ui.ts`)
+## Meta / OG
+
+La fuente de verdad de los textos meta es `src/i18n/ui.ts` (`meta.title/description/keywords`).
+Valores actuales (referencia):
 
 ```
-EN  title: "Subwave — AI subtitles for any video"
-    desc:  "Generate, edit and translate subtitles with AI right in your browser. From sound to text — no uploads, no servers, your file never leaves your device."
-ES  title: "Subwave — Subtítulos con IA para cualquier vídeo"
-    desc:  "Genera, edita y traduce subtítulos con IA en tu navegador. Del audio al texto: sin subidas ni servidores, tu archivo nunca sale de tu equipo."
+EN  title: "Subwave — Free AI subtitle generator in your browser"
+    desc:  "Free AI subtitle generator in your browser: transcribe, translate and burn captions, then export .srt or MP4. No uploads — your file stays on-device."
+ES  title: "Subwave — Generador de subtítulos con IA en el navegador"
+    desc:  "Generador de subtítulos con IA en el navegador: transcribe, traduce y quema subtítulos, y exporta .srt o MP4. Sin subidas — tu archivo no sale del equipo."
 ```
 
 ## Assets incluidos

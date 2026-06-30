@@ -38,7 +38,7 @@ VIBE       = "Landing de papel editorial (Instrument Serif + Outfit, textura sut
 | Deploy | **Vercel** (gratis). El build estático también vale para Cloudflare Pages / Netlify / GitHub Pages |
 | Estilos | **Tailwind CSS 4** vía `@tailwindcss/vite` (sin config; todo en `@theme`) |
 | ASR (voz→texto) | **`@huggingface/transformers`** (transformers.js) con Whisper |
-| Traducción | transformers.js con **NLLB-200** (`Xenova/nllb-200-distilled-600M`) |
+| Traducción | transformers.js con **OPUS-MT** (`Xenova/opus-mt-{src}-{tgt}`, Helsinki-NLP) |
 | Extracción de audio | **`@ffmpeg/ffmpeg`** + `@ffmpeg/util` (WASM, single-thread) |
 | Export de vídeo | **`mediabunny`** + WebCodecs, fallback canvas + `MediaRecorder` |
 | Paquetes | **pnpm**. Node `>=22.12` |
@@ -62,7 +62,7 @@ SPA **multi-etapa** incrustada en páginas estáticas. El trabajo pesado va a **
 
 ```
 Hilo principal       → UI, reproducción, timeline, orquestación de FFmpeg, render de export.
-Worker transcripción → carga Whisper/NLLB y corre la inferencia fuera del hilo principal.
+Worker transcripción → carga Whisper/OPUS-MT y corre la inferencia fuera del hilo principal.
 Worker FFmpeg        → extrae el audio del vídeo subido antes de transcribir.
 Modelos              → se descargan de Hugging Face la 1ª vez (~150 MB) y se cachean en IndexedDB.
 Idioma               → redirección en CLIENTE (script inline en la home), no en servidor.
@@ -79,7 +79,7 @@ Detalle de la IA → skill `browser-asr-transformers`.
 ## Flujo de usuario (las etapas)
 
 1. **Upload** — drag & drop o seleccionar. MP4, MOV, WebM, MKV (vídeo) y MP3, WAV, OGG (audio). File API; **nunca se sube**.
-2. **Config** — idioma del audio (o autodetectar) e idioma de subtítulos (activa traducción NLLB si difiere).
+2. **Config** — idioma del audio (o autodetectar) e idioma de subtítulos (activa traducción OPUS-MT si difiere).
 3. **Editor** — lista de segmentos + timeline con scrubbing, edición de texto/timings, **undo/redo**, pistas multi-idioma, y presets de estilo (fuente, color, fondo, contorno, posición, opacidad, tamaño).
 4. **Export** — `.srt`; y **MP4 con subtítulos quemados** (solo vídeo): WebCodecs + mediabunny, fallback canvas + `MediaRecorder`, con modal de progreso. Modo solo-audio: genera `.srt` sin vídeo. Skill `webcodecs-video-export`.
 
@@ -123,7 +123,7 @@ src/
 3. **Upload + extracción de audio** (FFmpeg WASM en worker) con progreso.
 4. **ASR en worker**: descarga de Whisper con progreso (IndexedDB), transcripción → segmentos. WebGPU→WASM funcionando.
 5. **Editor + timeline + undo/redo + estilos de subtítulo** (modo "agua profunda").
-6. **Traducción NLLB** cuando el idioma de salida difiere.
+6. **Traducción OPUS-MT** cuando el idioma de salida difiere.
 7. **Export `.srt`** y **MP4 quemado** (mediabunny + fallback) con modal de progreso.
 8. **i18n en/es completo**, SEO/OG/hreflang (usa `og.png`), sitemap, redirección de idioma en cliente.
 9. **Pulido**: accesibilidad (foco, teclado, `prefers-reduced-motion`), estados de error, panel de descargas para limpiar modelos, animación de onda en el hero.

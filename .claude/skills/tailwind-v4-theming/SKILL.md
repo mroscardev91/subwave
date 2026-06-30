@@ -10,9 +10,9 @@ En Tailwind v4 **no hay `tailwind.config.js`**: el tema se declara en CSS con `@
 > **La fuente de verdad de los tokens de Subwave es `BRANDING.md`.** Copia de ahí el bloque
 > `@theme` completo a `src/styles/global.css`. No inventes colores; usa esos hex.
 
-## El sistema de dos modos (inspirado en subvid.app)
+## El sistema de dos modos
 
-Subwave tiene dos superficies, como subvid:
+Subwave tiene dos superficies:
 
 - **Landing = papel editorial.** `--color-paper` (#F3F4F2), tinta casi negra, textura sutil,
   titulares en Instrument Serif. Aplica la clase `landing` al `<body>` de las páginas de marketing.
@@ -20,7 +20,7 @@ Subwave tiene dos superficies, como subvid:
   (`--color-aqua`, #2DE0CE) como **único** color de marca que destaca. Aplica la clase `editor`
   al `<body>` del editor.
 
-El acento aqua es a Subwave lo que el lima es a subvid: un solo color, usado con contención.
+El aqua es el único color de marca de Subwave: uno solo, usado con contención.
 
 ## Cómo se usan los tokens
 

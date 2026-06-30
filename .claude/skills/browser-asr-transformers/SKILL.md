@@ -1,6 +1,6 @@
 ---
 name: browser-asr-transformers
-description: Use cuando trabajes con transcripción (Whisper) o traducción (NLLB) de subtítulos en el navegador con transformers.js dentro de Web Workers. Cubre el protocolo de mensajes main⇄worker, la descarga de modelos con progreso, el caché en IndexedDB y el fallback WebGPU→WASM. Trigger: transcriber.worker.ts, translation.worker.ts, transformersClient.ts, @huggingface/transformers, pipeline, automatic-speech-recognition, dtype, chunk_length_s.
+description: Use cuando trabajes con transcripción (Whisper) o traducción (OPUS-MT) de subtítulos en el navegador con transformers.js dentro de Web Workers. Cubre el protocolo de mensajes main⇄worker, la descarga de modelos con progreso, el caché en IndexedDB y el fallback WebGPU→WASM. Trigger: transcriber.worker.ts, translation.worker.ts, transformersClient.ts, @huggingface/transformers, pipeline, automatic-speech-recognition, dtype, chunk_length_s.
 ---
 
 # IA en el navegador con transformers.js
@@ -10,7 +10,7 @@ Toda la inferencia corre en el cliente, dentro de Web Workers, para no congelar 
 ## Modelos
 
 - **ASR (voz→texto)**: Whisper. Empieza con `Xenova/whisper-base` (equilibrio tamaño/calidad, ~150 MB). Ofrece tiny/small como opciones.
-- **Traducción**: `Xenova/nllb-200-distilled-600M`. Solo se carga si el idioma de salida difiere del de entrada.
+- **Traducción**: `Xenova/opus-mt-{src}-{tgt}` (Helsinki-NLP). Solo se carga si el idioma de salida difiere del de entrada.
 
 ## Setup del worker ASR
 
@@ -52,7 +52,7 @@ self.onmessage = async (event: MessageEvent) => {
 };
 ```
 
-Para el worker de traducción, usa el mismo patrón con `pipeline("translation", model)` y pásale `src_lang` / `tgt_lang` (códigos NLLB, p. ej. `spa_Latn`, `eng_Latn`).
+Para el worker de traducción, usa el mismo patrón con `pipeline("translation", model)`. OPUS-MT es bilingüe por modelo: no necesita `src_lang`/`tgt_lang`, basta pasar el texto a traducir.
 
 ## Protocolo main ⇄ worker
 
