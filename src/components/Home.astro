@@ -48,7 +48,13 @@ const home = `${localePath[lang]}/`;
         {t.hero.badge}
       </p>
       <h1 data-landing-heading tabindex="-1" class="mt-5 text-5xl leading-[1.05] text-ink focus:outline-none sm:text-6xl lg:text-7xl">
-        {t.hero.titleLead} <em class="italic text-ink underline decoration-aqua-deep decoration-[3px] underline-offset-[8px]">{t.hero.titleEm}</em>
+        {t.hero.titleLead}{" "}
+        <em class="relative inline-block italic text-ink">
+          {t.hero.titleEm}
+          <svg class="pointer-events-none absolute left-0 -bottom-[0.18em] h-[0.32em] w-full overflow-visible" viewBox="0 0 120 10" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 5 Q7.5 1 15 5 T30 5 T45 5 T60 5 T75 5 T90 5 T105 5 T120 5" fill="none" stroke="#15B5A6" stroke-width="2.4" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+          </svg>
+        </em>
       </h1>
       <p class="mt-6 max-w-xl text-lg leading-relaxed text-ink-soft">{t.hero.sub}</p>
 
