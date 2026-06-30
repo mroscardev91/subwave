@@ -7,7 +7,7 @@
 // exportVideo() detecta soporte de WebCodecs y elige A; si A falla, cae a B.
 
 import { drawSubtitle } from "@/scripts/export/subtitleRenderer";
-import { segmentAt, type Segment } from "@/scripts/subtitles";
+import { segmentAt, wordsForSegment, type Segment } from "@/scripts/subtitles";
 import type { SubtitleStyle } from "@/scripts/subtitleStyle";
 
 export interface VideoExportResult {
@@ -98,7 +98,7 @@ async function exportWebm(
   const draw = () => {
     ctx.drawImage(video, 0, 0, width, height);
     const seg = segmentAt(segments, video.currentTime);
-    drawSubtitle(ctx, seg?.text ?? "", style, width, height);
+    drawSubtitle(ctx, seg?.text ?? "", style, width, height, seg ? { words: wordsForSegment(seg), time: video.currentTime } : null);
     onProgress(Math.min(1, video.currentTime / duration));
     if (video.ended) {
       if (recorder.state !== "inactive") recorder.stop();

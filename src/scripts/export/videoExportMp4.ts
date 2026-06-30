@@ -20,7 +20,7 @@ import {
 } from "mediabunny";
 
 import { drawSubtitle } from "@/scripts/export/subtitleRenderer";
-import { segmentAt } from "@/scripts/subtitles";
+import { segmentAt, wordsForSegment } from "@/scripts/subtitles";
 import type { Segment } from "@/scripts/subtitles";
 import type { SubtitleStyle } from "@/scripts/subtitleStyle";
 import type { VideoExportResult } from "@/scripts/export/videoExport";
@@ -67,7 +67,7 @@ export async function exportMp4(
     for await (const frame of sink.canvases()) {
       ctx.drawImage(frame.canvas, 0, 0, width, height);
       const seg = segmentAt(segments, frame.timestamp);
-      drawSubtitle(ctx, seg?.text ?? "", style, width, height);
+      drawSubtitle(ctx, seg?.text ?? "", style, width, height, seg ? { words: wordsForSegment(seg), time: frame.timestamp } : null);
       await videoSource.add(frame.timestamp, frame.duration);
       onProgress(Math.min(0.99, frame.timestamp / duration));
     }

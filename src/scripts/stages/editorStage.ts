@@ -4,7 +4,7 @@
 // con el texto en los bloques. Undo/redo y estilo en vivo.
 
 import { session, setActiveTrack, addTrack } from "@/scripts/session";
-import { formatTimecode, formatTimecodeFull, parseTimecode } from "@/scripts/subtitles";
+import { formatTimecode, formatTimecodeFull, parseTimecode, wordsForSegment, type Segment } from "@/scripts/subtitles";
 import * as segs from "@/scripts/editorSegments";
 import * as history from "@/scripts/editorHistory";
 import * as timeline from "@/scripts/timeline";
@@ -35,6 +35,7 @@ let timeEl: HTMLElement;
 let filenameEl: HTMLElement;
 let customPanel: HTMLElement;
 let customizeBtn: HTMLButtonElement;
+let animBtn: HTMLButtonElement;
 let tracksEl: HTMLElement;
 let addLangSel: HTMLSelectElement;
 let trackStatusEl: HTMLElement;
@@ -107,11 +108,14 @@ export function initEditorStage(): void {
   });
   customizeBtn = q('[data-editor="customize-toggle"]');
   customizeBtn.addEventListener("click", () => setCustomPanel(customPanel.hidden));
-  // Botón Animación: por ahora solo marca/desmarca (el resaltado animado del
-  // subtítulo es el siguiente feature).
-  const animBtn = q<HTMLButtonElement>('[data-editor="animation-toggle"]');
+  // Animación (karaoke): resalta la palabra que suena. Reconstruye el bocadillo
+  // (palabras en spans) y registra en el historial.
+  animBtn = q('[data-editor="animation-toggle"]');
   animBtn.addEventListener("click", () => {
-    animBtn.setAttribute("aria-pressed", String(animBtn.getAttribute("aria-pressed") !== "true"));
+    session.style.animate = !session.style.animate;
+    applyStyle();
+    updateOverlay(); // reconstruye el bocadillo según el modo
+    segs.commitStyle();
   });
 
   document.addEventListener("keydown", (event) => {
@@ -190,6 +194,7 @@ function layoutOverlay(): void {
 export function enterEditor(): void {
   initEditorStage();
   segs.init();
+  bubbleSig = ""; // fuerza reconstruir el bocadillo
   setCustomPanel(false); // entra con la preview despejada
   mountMedia();
   renderTracks();
@@ -322,17 +327,53 @@ function refreshActive(time: number): void {
     // Sigue la reproducción: trae la tarjeta activa a la vista (suave).
     if (id) listEl.querySelector<HTMLElement>(`.seg-row[data-seg-id="${id}"]`)?.scrollIntoView({ block: "nearest" });
   }
-  setBubble(active?.text ?? "");
+  renderBubble(active);
+  updateBubbleHighlight(time);
 }
 
 function updateOverlay(): void {
   refreshActive(media?.currentTime ?? 0);
 }
 
-function setBubble(text: string): void {
-  bubble.textContent = text;
-  bubble.style.display = text ? "" : "none";
-  if (text) updateBubbleFont();
+let bubbleSig = "";
+// Construye el contenido del bocadillo: texto plano, o palabras en <span> cuando
+// la animación está activa (para resaltar la que suena). Se reconstruye solo si
+// cambia el texto/segmento/animación (la cima del playhead solo actualiza el
+// resaltado, sin tocar el DOM).
+function renderBubble(active: Segment | null): void {
+  const text = active?.text ?? "";
+  const sig = `${active?.id ?? ""}|${session.style.animate ? 1 : 0}|${text}`;
+  if (sig === bubbleSig) return;
+  bubbleSig = sig;
+  if (!text) {
+    bubble.replaceChildren();
+    bubble.style.display = "none";
+    return;
+  }
+  bubble.style.display = "";
+  if (session.style.animate && active) {
+    const nodes: Node[] = [];
+    wordsForSegment(active).forEach((wt, i) => {
+      if (i) nodes.push(document.createTextNode(" "));
+      const sp = document.createElement("span");
+      sp.className = "subw";
+      sp.dataset.s = String(wt.start);
+      sp.dataset.e = String(wt.end);
+      sp.textContent = wt.text;
+      nodes.push(sp);
+    });
+    bubble.replaceChildren(...nodes);
+  } else {
+    bubble.textContent = text;
+  }
+  updateBubbleFont();
+}
+
+function updateBubbleHighlight(time: number): void {
+  if (!session.style.animate) return;
+  for (const sp of bubble.querySelectorAll<HTMLElement>(".subw")) {
+    sp.classList.toggle("is-spoken", time >= Number(sp.dataset.s) && time < Number(sp.dataset.e));
+  }
 }
 
 // Tamaño de fuente del bocadillo de la preview con la MISMA lógica que el export
@@ -504,6 +545,7 @@ function applyStyle(): void {
   positionBubble(bubble, session.style);
   updateBubbleFont(); // recalcula el tamaño (encaje en 2 líneas) según el estilo
   setActivePosition();
+  animBtn.setAttribute("aria-pressed", String(session.style.animate));
   refreshPresetChips();
 }
 

@@ -1,11 +1,28 @@
 // Modelo de subtítulos y utilidades de tiempo. Un subtítulo es un segmento con
 // tiempo de inicio/fin (segundos) y texto.
 
+export interface WordTiming {
+  text: string;
+  start: number;
+  end: number;
+}
+
 export interface Segment {
   id: string;
   start: number;
   end: number;
   text: string;
+  words?: WordTiming[]; // tiempos por palabra (para la animación de resaltado)
+}
+
+// Palabras con tiempo de un segmento: las reales si las hay; si no (p. ej. una
+// pista traducida), reparte el texto uniformemente sobre [start, end].
+export function wordsForSegment(seg: Segment): WordTiming[] {
+  if (seg.words && seg.words.length) return seg.words;
+  const tokens = seg.text.trim().split(/\s+/).filter(Boolean);
+  if (!tokens.length) return [];
+  const span = Math.max(0.001, seg.end - seg.start) / tokens.length;
+  return tokens.map((text, i) => ({ text, start: seg.start + i * span, end: seg.start + (i + 1) * span }));
 }
 
 // Troceo estilo subvid. Una pausa larga corta el trozo aunque sea corto.
@@ -60,7 +77,7 @@ function groupWords(chunks: any[], aspectRatio: number): Segment[] {
     if (!line.length) return;
     const start = line[0].start;
     const end = Math.max(start + 0.35, line[line.length - 1].end);
-    segments.push({ id: `seg-${segments.length}`, start, end, text: wordsText(line) });
+    segments.push({ id: `seg-${segments.length}`, start, end, text: wordsText(line), words: line.map((w) => ({ ...w })) });
     line = [];
   };
 

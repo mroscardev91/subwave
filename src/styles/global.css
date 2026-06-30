@@ -100,6 +100,10 @@
 .seg-row.is-selected { border-color: var(--color-aqua); }
 .seg-row.is-active { background: color-mix(in oklab, var(--color-aqua) 16%, transparent); }
 
+/* Animación de subtítulo (karaoke): palabras atenuadas, la que suena en blanco. */
+[data-editor="bubble"] .subw { opacity: 0.42; transition: opacity 0.08s linear; }
+[data-editor="bubble"] .subw.is-spoken { opacity: 1; color: #fff; }
+
 /* Scroll fino y temático del panel de tarjetas (estilo subvid). */
 [data-editor="segments"] {
   scrollbar-width: thin;

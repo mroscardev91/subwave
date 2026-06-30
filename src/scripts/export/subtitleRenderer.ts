@@ -3,6 +3,7 @@
 // en el vídeo (WebCodecs y MediaRecorder).
 
 import { hexToRgba, SIZE_MIN, SIZE_MAX, MARGIN_TOP, MARGIN_BOTTOM, type SubtitleStyle, type SubtitleFont } from "@/scripts/subtitleStyle";
+import type { WordTiming } from "@/scripts/subtitles";
 
 const FONT_STACK: Record<SubtitleFont, string> = {
   sans: "Outfit, ui-sans-serif, system-ui, sans-serif",
@@ -91,6 +92,7 @@ export function drawSubtitle(
   style: SubtitleStyle,
   width: number,
   height: number,
+  anim?: { words: WordTiming[]; time: number } | null,
 ): void {
   if (!text.trim()) return;
 
@@ -136,10 +138,41 @@ export function drawSubtitle(
     ctx.fill();
   }
 
+  const animate = style.animate && !!anim && anim.words.length > 0;
+  const outline = style.outline && style.bgOpacity === 0;
+
+  if (animate) {
+    // Karaoke: dibuja palabra a palabra; la que suena en `time` va a blanco
+    // pleno y el resto atenuado.
+    ctx.textAlign = "left";
+    const space = ctx.measureText(" ").width;
+    let wordIdx = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const lineWords = lines[i].split(" ").filter(Boolean);
+      const baseline = baseTop + i * lineHeight;
+      let x = cx - ctx.measureText(lines[i]).width / 2;
+      for (const w of lineWords) {
+        const wt = anim!.words[wordIdx++];
+        const active = !!wt && anim!.time >= wt.start && anim!.time < wt.end;
+        if (outline) {
+          ctx.lineJoin = "round";
+          ctx.strokeStyle = "rgba(0,0,0,0.9)";
+          ctx.lineWidth = Math.max(2, fontPx * 0.14);
+          ctx.strokeText(w, x, baseline);
+        }
+        ctx.fillStyle = active ? "#FFFFFF" : hexToRgba(style.color, 0.42);
+        ctx.fillText(w, x, baseline);
+        x += ctx.measureText(w).width + space;
+      }
+    }
+    ctx.textAlign = "center";
+    return;
+  }
+
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const baseline = baseTop + i * lineHeight;
-    if (style.outline && style.bgOpacity === 0) {
+    if (outline) {
       ctx.lineJoin = "round";
       ctx.strokeStyle = "rgba(0,0,0,0.9)";
       ctx.lineWidth = Math.max(2, fontPx * 0.14);

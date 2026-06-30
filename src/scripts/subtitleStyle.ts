@@ -15,6 +15,7 @@ export interface SubtitleStyle {
   position: SubtitlePosition;
   customX: number; // posición libre (centro), 0..100 % del frame
   customY: number; // posición libre (centro), 0..100 % del frame
+  animate: boolean; // resaltar la palabra que suena (karaoke)
 }
 
 export const SIZE_MIN = 0.7;
@@ -34,6 +35,7 @@ export const defaultSubtitleStyle: SubtitleStyle = {
   position: "bottom",
   customX: 50,
   customY: 90,
+  animate: false,
 };
 
 // Presets con la misma forma que las "plantillas" de subvid.
