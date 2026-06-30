@@ -79,7 +79,9 @@ export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
   el.style.lineHeight = "1.28";
   el.style.color = style.color;
   el.style.backgroundColor = style.bgOpacity > 0 ? hexToRgba(style.bg, style.bgOpacity) : "transparent";
-  el.style.padding = style.bgOpacity > 0 ? "0.22em 0.55em" : "0";
+  // Padding alineado con el export (vertical 0.3em total = padY 0.3·font;
+  // horizontal 0.5em por lado = padX 0.5·font) para que la caja coincida.
+  el.style.padding = style.bgOpacity > 0 ? "0.15em 0.5em" : "0";
   el.style.borderRadius = "0.3em";
   el.style.overflowWrap = "anywhere";
   el.style.whiteSpace = "pre-line";

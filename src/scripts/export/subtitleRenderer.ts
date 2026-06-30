@@ -115,11 +115,13 @@ export function drawSubtitle(
     cx = width * (Math.min(100, Math.max(0, style.customX)) / 100);
     baseTop = height * (Math.min(100, Math.max(0, style.customY)) / 100) - blockH / 2 + fontPx;
   } else if (style.position === "top") {
-    baseTop = height * MARGIN_TOP + fontPx;
+    // Borde superior de la caja al 8% (como positionBubble en la preview).
+    baseTop = height * MARGIN_TOP + fontPx + padY / 2;
   } else if (style.position === "middle") {
     baseTop = (height - blockH) / 2 + fontPx;
   } else {
-    baseTop = height - height * MARGIN_BOTTOM - (lines.length - 1) * lineHeight;
+    // Borde inferior de la caja al 94% (anclado por el borde, no por la baseline).
+    baseTop = height * (1 - MARGIN_BOTTOM) - blockH + fontPx - padY / 2;
   }
 
   // Un único fondo para todo el bloque (como el bocadillo de la preview).

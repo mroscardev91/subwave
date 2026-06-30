@@ -295,8 +295,9 @@ function setBubble(text: string): void {
 function updateBubbleFont(): void {
   const text = bubble.textContent ?? "";
   if (!measureCtx || !text) return;
-  const w = parseFloat(overlay.style.width) || previewEl.clientWidth;
-  const h = parseFloat(overlay.style.height) || previewEl.clientHeight;
+  // clientWidth/Height resuelven el tamaño real (incluido "100%" en audio).
+  const w = overlay.clientWidth || previewEl.clientWidth;
+  const h = overlay.clientHeight || previewEl.clientHeight;
   if (!w || !h) return;
   const { fontPx } = fitSubtitle(measureCtx, text, w, h, session.style);
   bubble.style.fontSize = `${fontPx}px`;
@@ -351,6 +352,9 @@ function setActivePosition(): void {
 // Arrastrar el bocadillo lo coloca libremente (posición "custom"). customX/customY
 // son el centro en % de la caja del vídeo (overlay).
 function initBubbleDrag(): void {
+  // El click (incl. el sintético tras arrastrar) no debe llegar al preview y
+  // conmutar play/pausa; stopPropagation en pointerdown no basta para el click.
+  bubble.addEventListener("click", (e) => e.stopPropagation());
   bubble.addEventListener("pointerdown", (e) => {
     if (e.button !== 0) return;
     e.preventDefault();
