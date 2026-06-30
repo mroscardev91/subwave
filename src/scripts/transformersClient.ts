@@ -8,6 +8,7 @@ let reqId = 0;
 interface Pending {
   resolve: (value: any) => void;
   reject: (error: Error) => void;
+  worker: Worker;
 }
 const pending = new Map<number, Pending>();
 const onProgress: { asr?: (p: any) => void; translation?: (p: any) => void } = {};
@@ -25,32 +26,41 @@ function route(event: MessageEvent): void {
   else p.resolve(result);
 }
 
-// Si un worker no puede instanciarse/evaluarse, rechaza lo pendiente y resetea.
-function failAll(error: Error): void {
-  for (const p of pending.values()) p.reject(error);
-  pending.clear();
-  asrWorker?.terminate();
-  transWorker?.terminate();
-  asrWorker = null;
-  transWorker = null;
+// Si un worker no puede instanciarse/evaluarse, rechaza SOLO lo suyo y lo resetea
+// (no arrastra al otro worker, que puede tener un modelo grande ya cargado).
+function failWorker(worker: Worker, error: Error): void {
+  for (const [id, p] of pending) {
+    if (p.worker !== worker) continue;
+    p.reject(error);
+    pending.delete(id);
+  }
+  if (worker === asrWorker) {
+    asrWorker.terminate();
+    asrWorker = null;
+  } else if (worker === transWorker) {
+    transWorker.terminate();
+    transWorker = null;
+  }
 }
 
 function getAsrWorker(): Worker {
   if (!asrWorker) {
-    asrWorker = new Worker(new URL("@/scripts/transcriber.worker.ts", import.meta.url), { type: "module" });
-    asrWorker.onmessage = route;
-    asrWorker.onerror = () => failAll(new Error("transcriber worker error"));
-    asrWorker.onmessageerror = () => failAll(new Error("transcriber worker message error"));
+    const w = new Worker(new URL("@/scripts/transcriber.worker.ts", import.meta.url), { type: "module" });
+    w.onmessage = route;
+    w.onerror = () => failWorker(w, new Error("transcriber worker error"));
+    w.onmessageerror = () => failWorker(w, new Error("transcriber worker message error"));
+    asrWorker = w;
   }
   return asrWorker;
 }
 
 function getTransWorker(): Worker {
   if (!transWorker) {
-    transWorker = new Worker(new URL("@/scripts/translation.worker.ts", import.meta.url), { type: "module" });
-    transWorker.onmessage = route;
-    transWorker.onerror = () => failAll(new Error("translation worker error"));
-    transWorker.onmessageerror = () => failAll(new Error("translation worker message error"));
+    const w = new Worker(new URL("@/scripts/translation.worker.ts", import.meta.url), { type: "module" });
+    w.onmessage = route;
+    w.onerror = () => failWorker(w, new Error("translation worker error"));
+    w.onmessageerror = () => failWorker(w, new Error("translation worker message error"));
+    transWorker = w;
   }
   return transWorker;
 }
@@ -58,7 +68,7 @@ function getTransWorker(): Worker {
 function send(worker: Worker, type: string, payload: any, transfer: Transferable[] = []): Promise<any> {
   const id = ++reqId;
   return new Promise((resolve, reject) => {
-    pending.set(id, { resolve, reject });
+    pending.set(id, { resolve, reject, worker });
     worker.postMessage({ id, type, payload }, transfer);
   });
 }

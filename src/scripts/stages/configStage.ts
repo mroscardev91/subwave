@@ -67,6 +67,10 @@ export function initConfigStage(): void {
 
     try {
       await ensureAsr(MODEL, {
+        // WASM a propósito: Whisper en WebGPU (transformers.js) es inestable según
+        // GPU/driver y puede generar salida vacía sin lanzar, lo que rompería la
+        // transcripción de forma silenciosa. El worker conserva la rama WebGPU
+        // (con caída a WASM) para activarla con webgpu:true cuando madure.
         webgpu: false,
         onProgress: (p) => {
           if (p?.status === "progress" && typeof p.progress === "number") {
