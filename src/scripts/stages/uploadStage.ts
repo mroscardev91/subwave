@@ -4,6 +4,7 @@
 
 import { extractAudio, NoAudioError, type ExtractPhase } from "@/scripts/media/audio";
 import { session, setFile, setAudio, resetMedia, type MediaKind } from "@/scripts/session";
+import { markFfmpegReady } from "@/scripts/modelLoader";
 
 const VIDEO_EXT = ["mp4", "mov", "webm", "mkv"];
 const AUDIO_EXT = ["mp3", "wav", "ogg"];
@@ -163,6 +164,7 @@ export function initUploadStage(): void {
         },
       });
 
+      markFfmpegReady(); // el core ya cargó (extracción real); refleja en el panel
       if (job !== activeJob) return; // superado por un reset/nueva selección
       setAudio(result.audio, result.sampleRate, result.duration);
       if (result.duration > WARN_SECONDS) showWarn(); // por duración real

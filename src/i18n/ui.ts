@@ -123,7 +123,9 @@ export interface UIStrings {
     };
     downloads: {
       title: string;
+      loading: string;
       ready: string;
+      engine: string;
       transcription: string;
       translation: string;
       pending: string;
@@ -306,9 +308,11 @@ export const ui: Record<Lang, UIStrings> = {
       },
       downloads: {
         title: "AI models",
+        loading: "Loading models…",
         ready: "All set",
-        transcription: "Transcription (Whisper)",
-        translation: "Translation",
+        engine: "FFmpeg WASM core",
+        transcription: "Whisper model",
+        translation: "Translation model",
         pending: "Not downloaded",
         empty: "No models downloaded yet",
         clearing: "Removing…",
@@ -488,9 +492,11 @@ export const ui: Record<Lang, UIStrings> = {
       },
       downloads: {
         title: "Modelos de IA",
+        loading: "Cargando modelos…",
         ready: "Todo listo",
-        transcription: "Transcripción (Whisper)",
-        translation: "Traducción",
+        engine: "Núcleo WASM de FFmpeg",
+        transcription: "Modelo Whisper",
+        translation: "Modelo de traducción",
         pending: "No descargado",
         empty: "Aún no hay modelos descargados",
         clearing: "Eliminando…",

@@ -65,6 +65,11 @@ async function getFFmpeg(cb?: ExtractCallbacks): Promise<FFmpeg> {
   return loadPromise;
 }
 
+/** Precarga el core FFmpeg (para el panel de modelos); resuelve al estar listo. */
+export async function preloadCore(): Promise<void> {
+  await getFFmpeg();
+}
+
 export async function extractAudio(file: File, cb: ExtractCallbacks = {}): Promise<ExtractedAudio> {
   const ff = await getFFmpeg(cb);
 

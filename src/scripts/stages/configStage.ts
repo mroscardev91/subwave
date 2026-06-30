@@ -8,8 +8,8 @@ import { session, setTracks } from "@/scripts/session";
 import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
+import { ASR_MODEL } from "@/scripts/models";
 
-export const ASR_MODEL = "Xenova/whisper-base";
 const MODEL = ASR_MODEL;
 
 export function initConfigStage(): void {

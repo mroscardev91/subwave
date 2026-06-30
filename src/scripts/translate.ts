@@ -3,6 +3,7 @@
 // idioma en el editor. Cada par de idiomas es un modelo Xenova/opus-mt-{src}-{tgt}.
 
 import { ensureTranslation, translate } from "@/scripts/transformersClient";
+import { setTranslationStatus } from "@/scripts/modelLoader";
 import type { Segment } from "@/scripts/subtitles";
 
 export type TranslatePhase = "loading" | "translating";
@@ -39,11 +40,18 @@ export async function translateSegments(
   const src = segments.map((s) => ({ ...s }));
   let texts = src.map((s) => s.text);
 
-  if (srcCode !== PIVOT && tgtCode !== PIVOT) {
-    texts = await translateHop(texts, srcCode, PIVOT, cb); // origen → inglés
-    texts = await translateHop(texts, PIVOT, tgtCode, cb); // inglés → destino
-  } else {
-    texts = await translateHop(texts, srcCode, tgtCode, cb);
+  setTranslationStatus("loading"); // refleja en el panel de modelos
+  try {
+    if (srcCode !== PIVOT && tgtCode !== PIVOT) {
+      texts = await translateHop(texts, srcCode, PIVOT, cb); // origen → inglés
+      texts = await translateHop(texts, PIVOT, tgtCode, cb); // inglés → destino
+    } else {
+      texts = await translateHop(texts, srcCode, tgtCode, cb);
+    }
+    setTranslationStatus("ready");
+  } catch (err) {
+    setTranslationStatus("idle");
+    throw err;
   }
 
   // Mismos tiempos, texto traducido. Ids propios de la pista.

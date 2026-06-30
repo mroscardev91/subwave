@@ -11,21 +11,30 @@ const d = ui[lang].client.downloads;
 ---
 
 <div data-downloads class="dock">
+  <span data-downloads="live" role="status" aria-live="polite" class="sr-only"></span>
   <button type="button" data-downloads="toggle" aria-expanded="false" aria-controls="downloads-panel" aria-label={d.aria} class="dock-badge">
     <svg viewBox="0 0 24 24" class="h-5 w-5" aria-hidden="true"><path d="M5 12.5 10 17 19 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
   </button>
 
   <div id="downloads-panel" data-downloads="panel" role="group" aria-label={d.aria} hidden class="dock-panel">
     <div class="dock-head">
-      <span class="dock-title">{d.title}</span>
+      <span data-downloads="title" class="dock-title">{d.title}</span>
       <span data-downloads="summary" class="dock-summary"></span>
     </div>
+    <div class="dock-bar" aria-hidden="true"><div data-downloads="bar" class="dock-bar-fill"></div></div>
     <ul class="dock-list">
-      <li>
+      <li data-model="ffmpeg">
+        <span class="dock-dot" aria-hidden="true"></span>
+        <span class="dock-model">{d.engine}</span>
+        <span data-downloads="ffmpeg" class="dock-size"></span>
+      </li>
+      <li data-model="whisper">
+        <span class="dock-dot" aria-hidden="true"></span>
         <span class="dock-model">{d.transcription}</span>
         <span data-downloads="whisper" class="dock-size"></span>
       </li>
-      <li>
+      <li data-model="translation">
+        <span class="dock-dot" aria-hidden="true"></span>
         <span class="dock-model">{d.translation}</span>
         <span data-downloads="translation" class="dock-size"></span>
       </li>
@@ -46,11 +55,33 @@ const d = ui[lang].client.downloads;
     transition: color 0.2s, border-color 0.2s, box-shadow 0.2s;
   }
   .dock-badge:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 2px; }
-  /* Modelos en caché → verde "todo listo". */
+  /* Modelos listos → verde "todo listo". */
   .dock[data-state="ready"] .dock-badge {
     color: var(--color-aqua);
     border-color: var(--color-aqua);
     box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-aqua) 18%, transparent);
+  }
+  /* Cargando → badge en aqua con pulso. */
+  .dock[data-state="loading"] .dock-badge {
+    color: var(--color-aqua);
+    border-color: color-mix(in oklab, var(--color-aqua) 55%, transparent);
+    animation: dock-pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes dock-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-aqua) 30%, transparent); }
+    50% { box-shadow: 0 0 0 5px color-mix(in oklab, var(--color-aqua) 8%, transparent); }
+  }
+
+  /* Barra de progreso global. */
+  .dock-bar {
+    margin-top: 0.75rem; height: 4px; border-radius: 999px;
+    background: color-mix(in oklab, var(--color-on-deep-soft) 18%, transparent);
+    overflow: hidden;
+  }
+  .dock-bar-fill {
+    height: 100%; width: 0%; border-radius: 999px;
+    background: var(--color-aqua);
+    transition: width 0.3s ease;
   }
   .dock-panel {
     position: absolute; right: 0; top: calc(100% + 0.6rem); z-index: 50;
@@ -66,11 +97,34 @@ const d = ui[lang].client.downloads;
   .dock-summary { font: 500 0.8rem/1 var(--font-sans); color: var(--color-aqua); }
   .dock-list { margin: 0.85rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; }
   .dock-list li {
-    display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;
+    display: flex; align-items: center; gap: 0.6rem;
     border-radius: 10px; border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 12%, transparent);
     background: var(--color-deep); padding: 0.6rem 0.75rem;
   }
-  .dock-model { font: 500 0.85rem/1.2 var(--font-sans); color: var(--color-on-deep); }
+  .dock-model { flex: 1; font: 500 0.85rem/1.2 var(--font-sans); color: var(--color-on-deep); }
+
+  /* Indicador por modelo: punto (idle) → spinner (cargando) → check (listo). */
+  .dock-dot {
+    position: relative; flex-shrink: 0;
+    width: 1.05rem; height: 1.05rem; border-radius: 999px;
+    border: 2px solid color-mix(in oklab, var(--color-on-deep-soft) 35%, transparent);
+  }
+  li[data-status="loading"] .dock-dot {
+    border-color: color-mix(in oklab, var(--color-aqua) 30%, transparent);
+    border-top-color: var(--color-aqua);
+    animation: dock-spin 0.7s linear infinite;
+  }
+  li[data-status="ready"] .dock-dot {
+    border-color: var(--color-aqua);
+    background: var(--color-aqua);
+  }
+  li[data-status="ready"] .dock-dot::after {
+    content: ""; position: absolute; left: 4px; top: 1px;
+    width: 4px; height: 8px;
+    border: solid var(--color-deep); border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  @keyframes dock-spin { to { transform: rotate(360deg); } }
   .dock-size { font: 500 0.75rem/1 var(--font-mono); color: var(--color-on-deep-soft); white-space: nowrap; }
   .dock-clear {
     margin-top: 0.85rem; width: 100%;
