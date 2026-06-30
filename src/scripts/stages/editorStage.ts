@@ -160,13 +160,16 @@ function layoutOverlay(): void {
     overlay.style.top = `${Math.round((cH - h) / 2)}px`;
     overlay.style.width = `${Math.round(w)}px`;
     overlay.style.height = `${Math.round(h)}px`;
-    overlay.style.padding = `${Math.max(4, Math.round(h * 0.06))}px`;
+    // Padding solo vertical (margen 6% arriba/abajo). El margen horizontal lo da
+    // el max-width 80% del bocadillo; con padding horizontal el ancho real se
+    // reducía dos veces y el texto saltaba a más líneas en cajas estrechas.
+    overlay.style.padding = `${Math.max(4, Math.round(h * 0.06))}px 0`;
   } else {
     overlay.style.left = "0";
     overlay.style.top = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
-    overlay.style.padding = "1.5rem";
+    overlay.style.padding = "1.5rem 0";
   }
   updateBubbleFont();
 }
