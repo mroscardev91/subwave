@@ -84,6 +84,7 @@ export function initEditorStage(): void {
     blocks: q('[data-editor="timeline-blocks"]'),
     playhead: q('[data-editor="timeline-playhead"]'),
     ruler: q('[data-editor="timeline-ruler"]'),
+    wave: q<HTMLCanvasElement>('[data-editor="timeline-wave"]'),
     onSeek: seek,
   });
 
@@ -205,6 +206,7 @@ export function enterEditor(): void {
   renderList();
   timeline.renderRuler();
   timeline.renderBlocks();
+  timeline.renderWaveform();
   timeline.setPlayhead(0);
   activeId = null;
   updateOverlay();
@@ -299,6 +301,7 @@ function onLoadedMeta(m: HTMLMediaElement): void {
     session.duration = m.duration;
     timeline.renderRuler();
     timeline.renderBlocks();
+    timeline.renderWaveform(); // la escala cambió: redibuja la onda
     timeline.setPlayhead(m.currentTime);
   }
   if (m === media && m === video) layoutOverlay(); // ya conocemos las dimensiones del frame

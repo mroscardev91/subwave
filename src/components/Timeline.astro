@@ -16,6 +16,8 @@ const e = ui[lang].app.editor;
   </div>
   <div data-editor="timeline-ruler" class="relative h-4 text-on-deep-soft"></div>
   <div class="relative mt-1 h-16 overflow-hidden rounded-lg border border-on-deep-soft/15 bg-deep">
+    <!-- Forma de onda del audio (capa de fondo, no captura puntero). -->
+    <canvas data-editor="timeline-wave" aria-hidden="true" class="pointer-events-none absolute inset-0 h-full w-full"></canvas>
     <!-- Superficie de scrub (slider). Los bloques son HERMANOS, no descendientes,
          para no anidar botones dentro de un role="slider" (ARIA válido). -->
     <div data-editor="timeline-track" role="slider" tabindex="0" aria-label={e.timeline} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="absolute inset-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-aqua"></div>

@@ -3,6 +3,7 @@
 
 import type { Segment } from "@/scripts/subtitles";
 import { defaultSubtitleStyle, type SubtitleStyle } from "@/scripts/subtitleStyle";
+import { clearWaveCache } from "@/scripts/timeline";
 
 export type MediaKind = "video" | "audio";
 
@@ -80,6 +81,7 @@ export function setAudio(audio: Float32Array, sampleRate: number, duration: numb
 
 export function resetMedia(): void {
   if (session.objectUrl) URL.revokeObjectURL(session.objectUrl);
+  clearWaveCache(); // suelta los picos cacheados (buffer PCM grande)
   session.file = null;
   session.kind = null;
   session.objectUrl = null;

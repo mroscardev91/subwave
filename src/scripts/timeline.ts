@@ -10,6 +10,7 @@ interface TimelineRefs {
   blocks: HTMLElement;
   playhead: HTMLElement;
   ruler: HTMLElement;
+  wave: HTMLCanvasElement;
   onSeek: (time: number) => void;
 }
 
@@ -21,8 +22,80 @@ function duration(): number {
   return session.duration || session.segments.at(-1)?.end || 1;
 }
 
+// Picos de amplitud (PEAK_BUCKETS columnas) cacheados por el Float32Array de
+// audio: O(n) una vez; los redibujados por resize solo remuestrean la caché.
+const PEAK_BUCKETS = 1600;
+let peakCache: { src: Float32Array; peaks: Float32Array } | null = null;
+
+function getPeaks(audio: Float32Array): Float32Array {
+  if (peakCache && peakCache.src === audio) return peakCache.peaks;
+  const peaks = new Float32Array(PEAK_BUCKETS);
+  const bucket = Math.max(1, Math.floor(audio.length / PEAK_BUCKETS));
+  let globalMax = 0;
+  for (let i = 0; i < PEAK_BUCKETS; i++) {
+    const from = i * bucket;
+    const to = i === PEAK_BUCKETS - 1 ? audio.length : Math.min(audio.length, from + bucket);
+    let max = 0;
+    for (let j = from; j < to; j++) {
+      const v = audio[j] < 0 ? -audio[j] : audio[j];
+      if (v > max) max = v;
+    }
+    peaks[i] = max;
+    if (max > globalMax) globalMax = max;
+  }
+  // Normaliza para que el pico más fuerte llene la altura.
+  if (globalMax > 0) for (let i = 0; i < PEAK_BUCKETS; i++) peaks[i] /= globalMax;
+  peakCache = { src: audio, peaks };
+  return peaks;
+}
+
+/** Pinta la forma de onda del audio en el canvas de fondo de la timeline. */
+export function renderWaveform(): void {
+  if (!refs) return;
+  const canvas = refs.wave;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  if (cssW === 0 || cssH === 0) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const audio = session.audio;
+  if (!audio || audio.length === 0) {
+    peakCache = null; // libera el buffer cacheado al perder el audio
+    return;
+  }
+  const peaks = getPeaks(audio);
+  const mid = cssH / 2;
+  const maxBar = cssH * 0.46;
+  // La onda comparte la escala temporal de la timeline (duration()); su propio
+  // largo es audio.length/sampleRate. Si el contenedor dura más que el PCM, la
+  // onda termina antes de cssW (no se estira para rellenar).
+  const d = duration();
+  const audioDur = audio.length / session.sampleRate;
+  ctx.fillStyle = "rgba(138, 147, 160, 0.35)"; // on-deep-soft atenuado
+  for (let x = 0; x < cssW; x++) {
+    const t = (x / cssW) * d;
+    if (t > audioDur) break;
+    const amp = peaks[Math.min(PEAK_BUCKETS - 1, Math.floor((t / audioDur) * PEAK_BUCKETS))];
+    const h = Math.max(0.5, amp * maxBar);
+    ctx.fillRect(x, mid - h, 1, h * 2);
+  }
+}
+
+/** Libera los picos cacheados (al resetear el medio); el buffer puede ser grande. */
+export function clearWaveCache(): void {
+  peakCache = null;
+}
+
 export function initTimeline(r: TimelineRefs): void {
   refs = r;
+  // Redibuja la onda cuando cambia el tamaño del track (resize de ventana).
+  new ResizeObserver(() => renderWaveform()).observe(r.wave);
   r.track.addEventListener("click", (event) => {
     if (performance.now() < suppressSeekUntil) {
       suppressSeekUntil = 0;
