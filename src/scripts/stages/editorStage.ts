@@ -16,6 +16,7 @@ let stage: HTMLElement;
 let video: HTMLVideoElement;
 let audio: HTMLAudioElement;
 let media: HTMLMediaElement | null = null;
+let previewEl: HTMLElement;
 let overlay: HTMLElement;
 let bubble: HTMLElement;
 let previewHint: HTMLElement;
@@ -28,6 +29,7 @@ let playBtn: HTMLButtonElement;
 let timeEl: HTMLElement;
 let filenameEl: HTMLElement;
 let customPanel: HTMLElement;
+let customizeBtn: HTMLButtonElement;
 let tracksEl: HTMLElement;
 let addLangSel: HTMLSelectElement;
 let trackStatusEl: HTMLElement;
@@ -38,6 +40,12 @@ function q<T extends HTMLElement>(sel: string): T {
   return stage.querySelector<T>(sel)!;
 }
 
+// Popover de estilo ("Personalizar"): visibilidad + estado ARIA en sincronía.
+function setCustomPanel(open: boolean): void {
+  customPanel.hidden = !open;
+  customizeBtn.setAttribute("aria-expanded", String(open));
+}
+
 export function initEditorStage(): void {
   if (wired) return;
   const root = document.querySelector<HTMLElement>('[data-stage="editor"]');
@@ -46,6 +54,7 @@ export function initEditorStage(): void {
 
   video = q('[data-editor="video"]');
   audio = q('[data-editor="audio"]');
+  previewEl = q('[data-editor="preview"]');
   overlay = q('[data-editor="overlay"]');
   bubble = q('[data-editor="bubble"]');
   previewHint = q('[data-editor="preview-hint"]');
@@ -90,15 +99,18 @@ export function initEditorStage(): void {
     addLangSel.value = "";
     if (code) void addLanguage(code);
   });
-  q('[data-editor="customize-toggle"]').addEventListener("click", (e) => {
-    const btn = e.currentTarget as HTMLElement;
-    const open = customPanel.hidden;
-    customPanel.hidden = !open;
-    btn.setAttribute("aria-expanded", String(open));
-  });
+  customizeBtn = q('[data-editor="customize-toggle"]');
+  customizeBtn.addEventListener("click", () => setCustomPanel(customPanel.hidden));
 
   document.addEventListener("keydown", (event) => {
     if (stage.hidden) return;
+    // Escape cierra el popover de estilo y devuelve el foco al botón.
+    if (event.key === "Escape" && !customPanel.hidden) {
+      event.preventDefault();
+      setCustomPanel(false);
+      customizeBtn.focus();
+      return;
+    }
     const editing = document.activeElement instanceof HTMLTextAreaElement || document.activeElement instanceof HTMLInputElement;
     if (editing) return;
     if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "z") return;
@@ -119,12 +131,45 @@ export function initEditorStage(): void {
   segs.onChange(onSegmentsChange);
   history.onChange(updateUndoRedo);
 
+  // Reajusta el overlay del subtítulo a la caja del vídeo cuando cambia el tamaño.
+  new ResizeObserver(() => layoutOverlay()).observe(previewEl);
+
   wired = true;
+}
+
+// Sitúa el overlay del subtítulo sobre la caja real del vídeo (letterbox de
+// object-contain), no sobre todo el contenedor: así el subtítulo queda dentro
+// del frame y con el mismo recorte/posición que la exportación. Para audio (sin
+// frame) cubre todo el preview.
+function layoutOverlay(): void {
+  if (media === video && !video.hidden && video.videoWidth && video.videoHeight) {
+    const cW = previewEl.clientWidth;
+    const cH = previewEl.clientHeight;
+    const ar = video.videoWidth / video.videoHeight;
+    let w = cW;
+    let h = cW / ar;
+    if (h > cH) {
+      h = cH;
+      w = cH * ar;
+    }
+    overlay.style.left = `${Math.round((cW - w) / 2)}px`;
+    overlay.style.top = `${Math.round((cH - h) / 2)}px`;
+    overlay.style.width = `${Math.round(w)}px`;
+    overlay.style.height = `${Math.round(h)}px`;
+    overlay.style.padding = `${Math.max(4, Math.round(h * 0.06))}px`;
+  } else {
+    overlay.style.left = "0";
+    overlay.style.top = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.padding = "1.5rem";
+  }
 }
 
 export function enterEditor(): void {
   initEditorStage();
   segs.init();
+  setCustomPanel(false); // entra con la preview despejada
   mountMedia();
   renderTracks();
   applyStyle();
@@ -168,6 +213,7 @@ function mountMedia(): void {
     audio.hidden = true;
     previewHint.hidden = false;
   }
+  layoutOverlay();
 }
 
 // ---- reproducción ----
@@ -200,6 +246,7 @@ function onLoadedMeta(m: HTMLMediaElement): void {
     timeline.renderBlocks();
     timeline.setPlayhead(m.currentTime);
   }
+  if (m === media && m === video) layoutOverlay(); // ya conocemos las dimensiones del frame
   updateTime();
 }
 

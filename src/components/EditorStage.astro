@@ -45,11 +45,13 @@ const toolBtn =
   <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
     <!-- Main: preview + playbar + presets -->
     <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-      <div data-editor="preview" class="relative grid min-h-[42vh] flex-1 cursor-pointer place-items-center bg-deep p-4">
+      <div data-editor="preview" class="relative grid min-h-0 flex-1 cursor-pointer place-items-center bg-deep p-4">
         <span data-editor="preview-hint" class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{e.preview}</span>
         <video data-editor="video" hidden playsinline class="absolute inset-0 h-full w-full object-contain"></video>
         <audio data-editor="audio" hidden></audio>
-        <div data-editor="overlay" aria-hidden="true" class="pointer-events-none absolute inset-0 flex justify-center p-6" style="align-items:flex-end">
+        <!-- Se posiciona por JS sobre la caja real del vídeo (letterbox), para que
+             el subtítulo quede DENTRO del frame, como en la exportación. -->
+        <div data-editor="overlay" aria-hidden="true" class="pointer-events-none absolute left-0 top-0 flex h-full w-full justify-center p-6" style="align-items:flex-end">
           <span data-editor="bubble" class="max-w-[90%] rounded text-center leading-tight"></span>
         </div>
       </div>
@@ -62,7 +64,7 @@ const toolBtn =
         <span data-editor="time" class="font-mono text-xs tabular-nums text-on-deep-soft">0:00 / 0:00</span>
       </div>
 
-      <div class="border-t border-on-deep-soft/15 px-6 py-3">
+      <div class="relative border-t border-on-deep-soft/15 px-6 py-3">
         <SubtitleStyleBar lang={lang} />
       </div>
     </div>
