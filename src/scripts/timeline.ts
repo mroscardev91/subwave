@@ -72,23 +72,99 @@ export function renderBlocks(): void {
   refs.blocks.replaceChildren();
 
   for (const s of session.segments) {
-    const block = document.createElement("button");
-    block.type = "button";
+    const block = document.createElement("div");
     block.dataset.segId = s.id;
+    block.tabIndex = 0;
+    block.setAttribute("role", "button");
     block.className = `timeline-block${s.id === selected ? " is-selected" : ""}`;
     block.style.left = `${(s.start / d) * 100}%`;
     block.style.width = `${Math.max(1, ((s.end - s.start) / d) * 100)}%`;
     const label = s.text || formatTimecode(s.start);
     block.title = label;
     block.setAttribute("aria-label", label);
-    block.textContent = s.text;
-    block.addEventListener("click", (event) => {
-      event.stopPropagation();
+
+    const txt = document.createElement("span");
+    txt.className = "tl-text";
+    txt.textContent = s.text;
+    const lh = document.createElement("span");
+    lh.className = "tl-handle tl-handle-l";
+    lh.setAttribute("aria-hidden", "true");
+    const rh = document.createElement("span");
+    rh.className = "tl-handle tl-handle-r";
+    rh.setAttribute("aria-hidden", "true");
+    block.append(txt, lh, rh);
+
+    const activate = () => {
       segments.select(s.id);
       refs!.onSeek(s.start);
+    };
+    block.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        activate();
+      }
     });
+    block.addEventListener("click", () => {
+      if (block.dataset.dragged === "1") {
+        block.dataset.dragged = "";
+        return; // fue un arrastre, no un click
+      }
+      activate();
+    });
+    lh.addEventListener("pointerdown", (e) => startDrag(s, block, "l", e));
+    rh.addEventListener("pointerdown", (e) => startDrag(s, block, "r", e));
+    block.addEventListener("pointerdown", (e) => {
+      if (e.target === lh || e.target === rh) return;
+      startDrag(s, block, "move", e);
+    });
+
     refs.blocks.appendChild(block);
   }
+}
+
+// Arrastre del bloque: mover (todo el bloque) o redimensionar (bordes), que
+// edita los tiempos del segmento. Commit (con snapshot de undo) al soltar.
+function startDrag(seg: { id: string; start: number; end: number }, block: HTMLElement, mode: "move" | "l" | "r", e: PointerEvent): void {
+  if (!refs || e.button !== 0) return;
+  e.preventDefault();
+  e.stopPropagation();
+  const trackW = refs.track.getBoundingClientRect().width || 1;
+  const d = duration();
+  const startX = e.clientX;
+  const orig = { start: seg.start, end: seg.end };
+  const cur = { ...orig };
+  const MIN = 0.1;
+  let moved = false;
+
+  const onMove = (ev: PointerEvent) => {
+    if (Math.abs(ev.clientX - startX) > 3) moved = true;
+    const dt = ((ev.clientX - startX) / trackW) * d;
+    let ns = orig.start;
+    let ne = orig.end;
+    if (mode === "move") {
+      ns = orig.start + dt;
+      ne = orig.end + dt;
+      if (ns < 0) { ne -= ns; ns = 0; }
+    } else if (mode === "l") {
+      ns = Math.max(0, Math.min(orig.end - MIN, orig.start + dt));
+    } else {
+      ne = Math.max(orig.start + MIN, orig.end + dt);
+    }
+    cur.start = ns;
+    cur.end = ne;
+    block.style.left = `${(ns / d) * 100}%`;
+    block.style.width = `${Math.max(0.5, ((ne - ns) / d) * 100)}%`;
+  };
+  const onUp = () => {
+    window.removeEventListener("pointermove", onMove);
+    window.removeEventListener("pointerup", onUp);
+    if (!moved) return;
+    block.dataset.dragged = "1"; // suprime el click posterior
+    segments.select(seg.id);
+    segments.updateTiming(seg.id, cur.start, cur.end); // reconstruye bloques + snapshot
+  };
+  window.addEventListener("pointermove", onMove);
+  window.addEventListener("pointerup", onUp);
 }
 
 export function setPlayhead(time: number): void {
@@ -105,7 +181,8 @@ export function updateBlockText(id: string, text: string): void {
   const block = refs.blocks.querySelector<HTMLElement>(`.timeline-block[data-seg-id="${id}"]`);
   if (!block) return;
   const label = text || "";
-  block.textContent = text;
+  const txt = block.querySelector<HTMLElement>(".tl-text");
+  if (txt) txt.textContent = text;
   block.title = label;
   block.setAttribute("aria-label", label);
 }

@@ -83,6 +83,19 @@
 .timeline-block.is-active { background: color-mix(in oklab, var(--color-aqua) 72%, var(--color-deep-soft)); color: var(--color-deep); }
 .timeline-block.is-selected { border-color: var(--color-aqua); box-shadow: 0 0 0 1px var(--color-aqua); }
 .timeline-block:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+/* Arrastre: mover el bloque o redimensionarlo por los bordes. */
+.timeline-block { cursor: grab; touch-action: none; }
+.timeline-block:active { cursor: grabbing; }
+.timeline-block .tl-text {
+  pointer-events: none; /* el arrastre lo captura el bloque */
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.tl-handle { position: absolute; top: 0; bottom: 0; width: 8px; cursor: ew-resize; }
+.tl-handle-l { left: 0; }
+.tl-handle-r { right: 0; }
 
 .seg-row.is-selected { border-color: var(--color-aqua); }
 .seg-row.is-active { background: color-mix(in oklab, var(--color-aqua) 16%, transparent); }
