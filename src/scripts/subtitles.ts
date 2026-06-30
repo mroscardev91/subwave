@@ -1,6 +1,8 @@
 // Modelo de subtítulos y utilidades de tiempo. Un subtítulo es un segmento con
 // tiempo de inicio/fin (segundos) y texto.
 
+import { MARGIN_BOTTOM, MARGIN_TOP, type SubtitleStyle } from "@/scripts/subtitleStyle";
+
 export interface WordTiming {
   text: string;
   start: number;
@@ -176,12 +178,142 @@ function effectiveEnd(segments: Segment[], i: number): number {
   return next && next.start > s.start ? next.start : s.start + 2;
 }
 
+// Texto de una cue en una sola "celda": una línea en blanco interna terminaría
+// el cue (SRT/VTT), así que se colapsan los saltos múltiples a uno.
+function cueText(raw: string): string {
+  return raw.trim().replace(/\n{2,}/g, "\n");
+}
+
 /** Serializa segmentos a SubRip (.srt). */
 export function toSrt(segments: Segment[]): string {
   const visible = segments.filter((s) => s.text.trim().length > 0);
   return visible
-    .map((s, i) => `${i + 1}\n${srtTime(s.start)} --> ${srtTime(effectiveEnd(visible, i))}\n${s.text.trim()}\n`)
+    .map((s, i) => `${i + 1}\n${srtTime(s.start)} --> ${srtTime(effectiveEnd(visible, i))}\n${cueText(s.text)}\n`)
     .join("\n");
+}
+
+function vttTime(seconds: number): string {
+  const ms = Math.max(0, Math.round(seconds * 1000));
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const s = Math.floor((ms % 60_000) / 1000);
+  const millis = ms % 1000;
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(millis, 3)}`;
+}
+
+// En el payload de un cue WebVTT, '<' abre etiqueta y '&' abre entidad; hay que
+// escaparlos. Escapar '>' además rompe cualquier '-->' literal del texto, que si
+// no terminaría el cue.
+function vttText(raw: string): string {
+  return cueText(raw)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Serializa segmentos a WebVTT (.vtt). */
+export function toVtt(segments: Segment[]): string {
+  const visible = segments.filter((s) => s.text.trim().length > 0);
+  const cues = visible
+    .map((s, i) => `${vttTime(s.start)} --> ${vttTime(effectiveEnd(visible, i))}\n${vttText(s.text)}`)
+    .join("\n\n");
+  return `WEBVTT\n\n${cues}\n`;
+}
+
+function assTime(seconds: number): string {
+  const cs = Math.max(0, Math.round(seconds * 100)); // centésimas
+  const h = Math.floor(cs / 360_000);
+  const m = Math.floor((cs % 360_000) / 6_000);
+  const s = Math.floor((cs % 6_000) / 100);
+  const centis = cs % 100;
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${h}:${pad(m)}:${pad(s)}.${pad(centis)}`;
+}
+
+// hex #RRGGBB → color ASS &HAABBGGRR (AA: 00 opaco, FF transparente).
+function hexToAss(hex: string, alpha = 0): string {
+  const n = parseInt(hex.replace("#", ""), 16) || 0;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  const a = Math.min(255, Math.max(0, Math.round(alpha)));
+  const hx = (v: number) => v.toString(16).toUpperCase().padStart(2, "0");
+  return `&H${hx(a)}${hx(b)}${hx(g)}${hx(r)}`;
+}
+
+const ASS_PLAY_W = 1920;
+const ASS_PLAY_H = 1080;
+const ASS_FONT: Record<SubtitleStyle["font"], string> = {
+  sans: "Outfit",
+  serif: "Instrument Serif",
+  mono: "JetBrains Mono",
+};
+
+/**
+ * Serializa a Advanced SubStation Alpha (.ass) llevando el estilo del editor:
+ * fuente, color, alineación (posición) y caja/contorno. Resolución de referencia
+ * 1920×1080; el reproductor escala al tamaño real del vídeo.
+ */
+export function toAss(segments: Segment[], style: SubtitleStyle): string {
+  const visible = segments.filter((s) => s.text.trim().length > 0);
+  const clamp = (v: number) => Math.min(100, Math.max(0, v));
+  const fontSize = Math.round(ASS_PLAY_H * 0.052 * style.size);
+  // Alineación numpad: arriba=8, abajo=2, centro/custom=5 (custom se reposiciona
+  // por \pos en cada Dialogue).
+  const align = style.position === "top" ? 8 : style.position === "bottom" ? 2 : 5;
+  const marginV =
+    style.position === "top"
+      ? Math.round(ASS_PLAY_H * MARGIN_TOP)
+      : style.position === "bottom"
+        ? Math.round(ASS_PLAY_H * MARGIN_BOTTOM)
+        : 0;
+  const boxed = style.bgOpacity > 0;
+  const borderStyle = boxed ? 3 : 1; // 3 = caja opaca, 1 = contorno+sombra
+  // Outline = ancho del contorno (y del padding de la caja en BorderStyle=3).
+  const outline = boxed || style.outline ? Math.max(2, Math.round(fontSize * 0.06)) : 0;
+  const shadow = boxed ? 0 : 2;
+  const primary = hexToAss(style.color);
+  // libass/VSFilter: con BorderStyle=3 la caja se pinta con OutlineColour (no
+  // BackColour). El color y la opacidad de la caja del usuario van ahí; sin caja,
+  // OutlineColour es el contorno negro del texto. BackColour queda como sombra.
+  const outlineColour = boxed ? hexToAss(style.bg, (1 - style.bgOpacity) * 255) : hexToAss("#000000");
+  const styleLine =
+    `Style: Default,${ASS_FONT[style.font]},${fontSize},${primary},${primary},` +
+    `${outlineColour},&H00000000,${style.weight >= 700 ? -1 : 0},0,0,0,100,100,0,0,` +
+    `${borderStyle},${outline},${shadow},${align},80,80,${marginV},1`;
+
+  const posTag =
+    style.position === "custom"
+      ? `{\\pos(${Math.round((clamp(style.customX) / 100) * ASS_PLAY_W)},${Math.round((clamp(style.customY) / 100) * ASS_PLAY_H)})}`
+      : "";
+
+  const events = visible
+    .map((s, i) => {
+      // Escapa el backslash literal (ZWSP rompe \n \N \h sin perderlo), quita las
+      // llaves de override y convierte los saltos reales a \N (en ese orden).
+      const text = cueText(s.text)
+        .replace(/\\/g, "\\\u200B")
+        .replace(/[{}]/g, "")
+        .replace(/\n/g, "\\N");
+      return `Dialogue: 0,${assTime(s.start)},${assTime(effectiveEnd(visible, i))},Default,,0,0,0,,${posTag}${text}`;
+    })
+    .join("\n");
+
+  return (
+    `[Script Info]\n` +
+    `ScriptType: v4.00+\n` +
+    `WrapStyle: 2\n` +
+    `ScaledBorderAndShadow: yes\n` +
+    `PlayResX: ${ASS_PLAY_W}\n` +
+    `PlayResY: ${ASS_PLAY_H}\n\n` +
+    `[V4+ Styles]\n` +
+    `Format: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\n` +
+    `${styleLine}\n\n` +
+    `[Events]\n` +
+    `Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n` +
+    `${events}\n`
+  );
 }
 
 /** Parsea "m:ss.ss" | "ss.ss" | "ss" a segundos. */

@@ -3,15 +3,22 @@
 // quemados. Sin modal: el progreso/errores se muestran en un estado aria-live.
 
 import { session } from "@/scripts/session";
-import { toSrt } from "@/scripts/subtitles";
+import { toSrt, toVtt, toAss } from "@/scripts/subtitles";
 import { exportVideo, type ExportFormat, type ExportQuality } from "@/scripts/export/videoExport";
 
-let srtBtn: HTMLButtonElement;
+let subBtn: HTMLButtonElement;
+let subFormatSel: HTMLSelectElement;
 let videoBtn: HTMLButtonElement;
 let formatSel: HTMLSelectElement;
 let qualitySel: HTMLSelectElement;
 let statusEl: HTMLElement;
 let exporting = false;
+
+const SUB_SERIALIZERS = {
+  srt: { ext: "srt", mime: "text/plain;charset=utf-8", run: () => toSrt(session.segments) },
+  vtt: { ext: "vtt", mime: "text/vtt;charset=utf-8", run: () => toVtt(session.segments) },
+  ass: { ext: "ass", mime: "text/plain;charset=utf-8", run: () => toAss(session.segments, session.style) },
+} as const;
 
 function download(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
@@ -31,7 +38,8 @@ function activeLang(): string {
 
 function setBusy(busy: boolean): void {
   exporting = busy;
-  srtBtn.disabled = busy;
+  subBtn.disabled = busy;
+  subFormatSel.disabled = busy;
   videoBtn.disabled = busy || session.kind !== "video" || !session.objectUrl || !session.file;
   formatSel.disabled = busy;
   qualitySel.disabled = busy;
@@ -40,7 +48,7 @@ function setBusy(busy: boolean): void {
 // Resincroniza el estado (el botón de vídeo se deshabilita en sesiones de solo
 // audio). Se llama al entrar al editor, cuando ya se conoce session.kind.
 export function refreshExportControls(): void {
-  if (srtBtn) setBusy(false);
+  if (subBtn) setBusy(false);
 }
 
 async function runVideo(): Promise<void> {
@@ -76,15 +84,18 @@ async function runVideo(): Promise<void> {
 }
 
 export function initExportControls(): void {
-  srtBtn = document.querySelector<HTMLButtonElement>('[data-export="srt"]')!;
-  if (!srtBtn) return;
+  subBtn = document.querySelector<HTMLButtonElement>('[data-export="sub"]')!;
+  if (!subBtn) return;
+  subFormatSel = document.querySelector<HTMLSelectElement>('[data-export="subformat"]')!;
   videoBtn = document.querySelector<HTMLButtonElement>('[data-export="video"]')!;
   formatSel = document.querySelector<HTMLSelectElement>('[data-export="format"]')!;
   qualitySel = document.querySelector<HTMLSelectElement>('[data-export="quality"]')!;
   statusEl = document.querySelector<HTMLElement>('[data-export="status"]')!;
 
-  srtBtn.addEventListener("click", () => {
-    download(new Blob([toSrt(session.segments)], { type: "text/plain;charset=utf-8" }), `${baseName()}-${activeLang()}.srt`);
+  subBtn.addEventListener("click", () => {
+    const fmt = (subFormatSel.value as keyof typeof SUB_SERIALIZERS) in SUB_SERIALIZERS ? (subFormatSel.value as keyof typeof SUB_SERIALIZERS) : "srt";
+    const { ext, mime, run } = SUB_SERIALIZERS[fmt];
+    download(new Blob([run()], { type: mime }), `${baseName()}-${activeLang()}.${ext}`);
   });
   videoBtn.addEventListener("click", () => void runVideo());
 }

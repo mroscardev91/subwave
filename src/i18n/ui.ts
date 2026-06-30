@@ -44,7 +44,8 @@ export interface UIStrings {
       addLine: string;
       customize: string;
       animation: string;
-      srtBtn: string;
+      subBtn: string;
+      subFormat: string;
       videoBtn: string;
       format: string;
       quality: string;
@@ -59,6 +60,9 @@ export interface UIStrings {
         neon: string;
         classic: string;
         terminal: string;
+        reels: string;
+        brand: string;
+        karaoke: string;
       };
       styleBar: {
         font: string;
@@ -223,7 +227,8 @@ export const ui: Record<Lang, UIStrings> = {
         addLine: "Add line",
         customize: "Customize",
         animation: "Animation",
-        srtBtn: "Download subtitles (.srt)",
+        subBtn: "Download subtitles",
+        subFormat: "Subtitle format",
         videoBtn: "Download video",
         format: "Format",
         quality: "Quality",
@@ -238,6 +243,9 @@ export const ui: Record<Lang, UIStrings> = {
           neon: "Neon",
           classic: "Classic",
           terminal: "Terminal",
+          reels: "Reels",
+          brand: "Brand",
+          karaoke: "Karaoke",
         },
         styleBar: {
           font: "Font",
@@ -400,7 +408,8 @@ export const ui: Record<Lang, UIStrings> = {
         addLine: "Añadir línea",
         customize: "Personalizar",
         animation: "Animación",
-        srtBtn: "Descargar subtítulos (.srt)",
+        subBtn: "Descargar subtítulos",
+        subFormat: "Formato de subtítulos",
         videoBtn: "Descargar vídeo",
         format: "Formato",
         quality: "Calidad",
@@ -415,6 +424,9 @@ export const ui: Record<Lang, UIStrings> = {
           neon: "Neón",
           classic: "Clásico",
           terminal: "Terminal",
+          reels: "Reels",
+          brand: "Marca",
+          karaoke: "Karaoke",
         },
         styleBar: {
           font: "Fuente",
