@@ -80,6 +80,9 @@ async function runVideo(): Promise<void> {
   setBar(0);
   progress.focus(); // el botón activo se deshabilita; mantén el foco dentro del diálogo
   try {
+    // Asegura que la fuente (Outfit) esté cargada para el canvas del export, así
+    // el quemado usa la misma tipografía que la preview (mismo reparto en líneas).
+    if (document.fonts?.ready) await document.fonts.ready;
     const { blob, ext } = await exportVideo(
       { file: session.file, objectUrl: session.objectUrl },
       session.segments,

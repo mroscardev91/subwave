@@ -47,15 +47,43 @@ function wrap(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   return lines;
 }
 
-// Proporción del tamaño de fuente respecto a la altura del frame (modelo subvid:
-// fontPx = altura · 0.052 · size). `size` es un multiplicador (1 = 100%).
+// Tamaño de fuente base = altura · 0.052 · size (modelo subvid). `size` es un
+// multiplicador (1 = 100%). MAX_LINES limita el subtítulo a 2 líneas: si no cabe,
+// se encoge la fuente hasta que entre (o hasta el mínimo).
 const FONT_HEIGHT_RATIO = 0.052;
 const MAX_WIDTH_RATIO = 0.8;
+const MAX_LINES = 2;
 
 /**
- * Pinta el subtítulo activo (puede ser "") en el contexto del canvas del vídeo.
- * La fuente se escala con la altura del frame (igual que la preview del editor),
- * así "lo que ves es lo que exportas" y el texto nunca se sale del frame.
+ * Elige el tamaño de fuente y el reparto en líneas para que el subtítulo quepa
+ * en MAX_LINES líneas dentro del 80% del ancho. Misma lógica en preview y export
+ * → lo que ves es lo que exportas. Deja `measure.font` fijado al valor elegido.
+ */
+export function fitSubtitle(
+  measure: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+  text: string,
+  width: number,
+  height: number,
+  style: SubtitleStyle,
+): { fontPx: number; lines: string[] } {
+  const size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, style.size));
+  const stack = FONT_STACK[style.font];
+  const minFont = Math.max(8, Math.round(height * 0.034 * size));
+  let fontPx = Math.max(1, Math.round(height * FONT_HEIGHT_RATIO * size));
+  let lines: string[];
+  for (;;) {
+    measure.font = `${style.weight} ${fontPx}px ${stack}`;
+    const maxTextW = Math.max(fontPx, width * MAX_WIDTH_RATIO - fontPx); // padX·2 = fontPx
+    lines = wrap(measure, text.trim(), maxTextW);
+    if (lines.length <= MAX_LINES || fontPx <= minFont) break;
+    fontPx = Math.round(fontPx * 0.93);
+  }
+  return { fontPx, lines };
+}
+
+/**
+ * Pinta el subtítulo activo (puede ser "") en el contexto del canvas del vídeo,
+ * en como mucho 2 líneas, sin salirse del frame.
  */
 export function drawSubtitle(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
@@ -66,8 +94,7 @@ export function drawSubtitle(
 ): void {
   if (!text.trim()) return;
 
-  const size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, style.size));
-  const fontPx = Math.round(height * FONT_HEIGHT_RATIO * size);
+  const { fontPx, lines } = fitSubtitle(ctx, text, width, height, style);
   const lineHeight = fontPx * 1.28;
   const padX = fontPx * 0.5;
   const padY = fontPx * 0.3;
@@ -77,8 +104,6 @@ export function drawSubtitle(
   ctx.textBaseline = "alphabetic";
 
   const maxBlockW = width * MAX_WIDTH_RATIO;
-  const maxTextW = Math.max(fontPx, maxBlockW - padX * 2);
-  const lines = wrap(ctx, text.trim(), maxTextW);
   const blockH = lines.length * lineHeight;
 
   // Baseline de la primera línea según la posición; en "bottom" el bloque crece

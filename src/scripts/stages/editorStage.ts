@@ -11,6 +11,10 @@ import * as timeline from "@/scripts/timeline";
 import { translateSegments } from "@/scripts/translate";
 import { languageOptions, langLabel } from "@/scripts/languages";
 import { applyBubbleStyle, positionToAlign, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
+import { fitSubtitle } from "@/scripts/export/subtitleRenderer";
+
+const measureCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
+const measureCtx = measureCanvas?.getContext("2d") ?? null;
 
 let stage: HTMLElement;
 let video: HTMLVideoElement;
@@ -164,6 +168,7 @@ function layoutOverlay(): void {
     overlay.style.height = "100%";
     overlay.style.padding = "1.5rem";
   }
+  updateBubbleFont();
 }
 
 export function enterEditor(): void {
@@ -284,6 +289,19 @@ function updateOverlay(): void {
 function setBubble(text: string): void {
   bubble.textContent = text;
   bubble.style.display = text ? "" : "none";
+  if (text) updateBubbleFont();
+}
+
+// Tamaño de fuente del bocadillo de la preview con la MISMA lógica que el export
+// (fitSubtitle): se encoge hasta caber en 2 líneas dentro de la caja del vídeo.
+function updateBubbleFont(): void {
+  const text = bubble.textContent ?? "";
+  if (!measureCtx || !text) return;
+  const w = parseFloat(overlay.style.width) || previewEl.clientWidth;
+  const h = parseFloat(overlay.style.height) || previewEl.clientHeight;
+  if (!w || !h) return;
+  const { fontPx } = fitSubtitle(measureCtx, text, w, h, session.style);
+  bubble.style.fontSize = `${fontPx}px`;
 }
 
 // ---- estilo ----
@@ -370,6 +388,7 @@ function applyStyleToControls(): void {
 
 function applyStyle(): void {
   applyBubbleStyle(bubble, session.style);
+  updateBubbleFont(); // recalcula el tamaño (encaje en 2 líneas) según el estilo
   overlay.style.alignItems = positionToAlign(session.style.position);
   // refleja el preset activo en los chips sin re-set de los controles finos
   const active = activePresetId();
