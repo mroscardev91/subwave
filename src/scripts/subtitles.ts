@@ -8,24 +8,23 @@ export interface Segment {
   text: string;
 }
 
-// Límite de un subtítulo agrupado: hasta ~2 líneas y unos pocos segundos.
-const MAX_SEGMENT_CHARS = 84;
-const MAX_SEGMENT_SECONDS = 6;
-// Fin de frase (incluye terminadores CJK/fullwidth y árabe; permite un cierre
-// de comilla/paréntesis tras el signo).
-const SENTENCE_END = /[.!?…。！？؟](["'»)\]]+)?$/;
+// Tamaño de un subtítulo: trozos cortos estilo subvid (~4 palabras / 2 líneas).
+const MAX_CUE_WORDS = 5;
+const MAX_CUE_CHARS = 30;
+// Pausa (silencio entre palabras) que fuerza un corte aunque el trozo sea corto.
+const CUE_GAP_SECONDS = 0.6;
 
 // Convierte la salida de Whisper (transformers.js) en segmentos. Con
-// return_timestamps:true viene `chunks: [{ timestamp: [start, end], text }]`,
-// que suelen ser trozos cortos; los agrupamos en FRASES (cortando en
-// puntuación de fin de frase, o al superar el límite de longitud/duración)
-// para no partir una frase a la mitad, como hace subvid.
+// return_timestamps:"word" viene `chunks: [{ timestamp: [start, end], text }]`
+// por PALABRA; las agrupamos en trozos cortos (por nº de palabras, longitud o
+// una pausa), como hace subvid, en vez de un subtítulo por frase.
 // `any` acotado a la frontera con la librería ML.
 export function segmentsFromAsr(output: any): Segment[] {
   const chunks = output?.chunks;
   if (Array.isArray(chunks) && chunks.length > 0) {
     const segments: Segment[] = [];
     let text = "";
+    let words = 0;
     let start: number | null = null;
     let end = 0;
 
@@ -33,24 +32,28 @@ export function segmentsFromAsr(output: any): Segment[] {
       const t = text.trim();
       if (t) segments.push({ id: `seg-${segments.length}`, start: start ?? 0, end, text: t });
       text = "";
+      words = 0;
       start = null;
     };
 
     for (let i = 0; i < chunks.length; i++) {
       const c = chunks[i];
       const cStart = c?.timestamp?.[0] ?? end;
-      // Whisper suele dar end=null en el último chunk; usa el inicio del
-      // siguiente para que el segmento tenga duración visible.
+      // Whisper puede dar end=null en la última palabra; usa el inicio de la
+      // siguiente para que el trozo tenga duración visible.
       const next = chunks[i + 1]?.timestamp?.[0];
       const cEnd = c?.timestamp?.[1] ?? (typeof next === "number" ? next : cStart);
+      const gapBefore = start !== null && typeof cStart === "number" ? cStart - end : 0;
+
+      // Una pausa larga cierra el trozo actual antes de añadir la palabra.
+      if (start !== null && gapBefore >= CUE_GAP_SECONDS) flush();
+
       if (start === null) start = cStart;
       text += c?.text ?? "";
+      words += 1;
       end = cEnd;
 
-      const t = text.trim();
-      if (SENTENCE_END.test(t) || t.length >= MAX_SEGMENT_CHARS || end - (start ?? 0) >= MAX_SEGMENT_SECONDS) {
-        flush();
-      }
+      if (words >= MAX_CUE_WORDS || text.trim().length >= MAX_CUE_CHARS) flush();
     }
     flush();
     return segments;

@@ -45,7 +45,7 @@ self.onmessage = async (event: MessageEvent) => {
         chunk_length_s: 30,
         stride_length_s: 5,
         language: payload.language, // undefined → autodetectar
-        return_timestamps: true,
+        return_timestamps: "word", // por palabra → trozos cortos estilo subvid
         task: "transcribe",
       });
       post({ id, type: "done", result: output });
