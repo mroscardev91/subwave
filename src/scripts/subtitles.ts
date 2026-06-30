@@ -11,8 +11,9 @@ export interface Segment {
 // Límite de un subtítulo agrupado: hasta ~2 líneas y unos pocos segundos.
 const MAX_SEGMENT_CHARS = 84;
 const MAX_SEGMENT_SECONDS = 6;
-// Fin de frase (permite un cierre de comilla/paréntesis tras el signo).
-const SENTENCE_END = /[.!?…](["'»)\]]+)?$/;
+// Fin de frase (incluye terminadores CJK/fullwidth y árabe; permite un cierre
+// de comilla/paréntesis tras el signo).
+const SENTENCE_END = /[.!?…。！？؟](["'»)\]]+)?$/;
 
 // Convierte la salida de Whisper (transformers.js) en segmentos. Con
 // return_timestamps:true viene `chunks: [{ timestamp: [start, end], text }]`,
