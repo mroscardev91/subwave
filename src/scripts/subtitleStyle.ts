@@ -21,7 +21,7 @@ export const SIZE_MIN = 0.7;
 export const SIZE_MAX = 1.6;
 // Márgenes (fracción de la altura del frame) para arriba/abajo.
 export const MARGIN_TOP = 0.08;
-export const MARGIN_BOTTOM = 0.06;
+export const MARGIN_BOTTOM = 0.08;
 
 export const defaultSubtitleStyle: SubtitleStyle = {
   font: "sans",
@@ -86,6 +86,10 @@ export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
   el.style.overflowWrap = "anywhere";
   el.style.whiteSpace = "pre-line";
   el.style.setProperty("text-wrap", "balance");
+  // width:max-content + max-width 80% (vía clase): el bocadillo usa todo el ancho
+  // disponible y reparte el texto en greedy como el export; sin esto, al ser
+  // absoluto se encoge a una columna estrecha y salta a más líneas.
+  el.style.width = "max-content";
   el.style.pointerEvents = "auto"; // arrastrable para posición libre
   el.style.cursor = "grab";
   el.style.touchAction = "none";
