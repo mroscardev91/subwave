@@ -14,6 +14,8 @@ interface TimelineRefs {
 }
 
 let refs: TimelineRefs | null = null;
+// Tras un arrastre, suprime el click de scrub que el navegador dispara al soltar.
+let suppressSeekUntil = 0;
 
 function duration(): number {
   return session.duration || session.segments.at(-1)?.end || 1;
@@ -22,6 +24,10 @@ function duration(): number {
 export function initTimeline(r: TimelineRefs): void {
   refs = r;
   r.track.addEventListener("click", (event) => {
+    if (performance.now() < suppressSeekUntil) {
+      suppressSeekUntil = 0;
+      return;
+    }
     const rect = r.track.getBoundingClientRect();
     const ratio = (event.clientX - rect.left) / rect.width;
     r.onSeek(Math.max(0, Math.min(1, ratio)) * duration());
@@ -104,11 +110,8 @@ export function renderBlocks(): void {
         activate();
       }
     });
-    block.addEventListener("click", () => {
-      if (block.dataset.dragged === "1") {
-        block.dataset.dragged = "";
-        return; // fue un arrastre, no un click
-      }
+    block.addEventListener("click", (event) => {
+      event.stopPropagation(); // no propagar al scrub del track
       activate();
     });
     lh.addEventListener("pointerdown", (e) => startDrag(s, block, "l", e));
@@ -135,6 +138,14 @@ function startDrag(seg: { id: string; start: number; end: number }, block: HTMLE
   const cur = { ...orig };
   const MIN = 0.1;
   let moved = false;
+  let done = false;
+  // setPointerCapture garantiza recibir pointerup aunque se suelte fuera de la
+  // ventana; los listeners van en el bloque (capturado), no en window.
+  try {
+    block.setPointerCapture(e.pointerId);
+  } catch {
+    /* sin captura igualmente funciona dentro de la ventana */
+  }
 
   const onMove = (ev: PointerEvent) => {
     if (Math.abs(ev.clientX - startX) > 3) moved = true;
@@ -155,16 +166,26 @@ function startDrag(seg: { id: string; start: number; end: number }, block: HTMLE
     block.style.left = `${(ns / d) * 100}%`;
     block.style.width = `${Math.max(0.5, ((ne - ns) / d) * 100)}%`;
   };
-  const onUp = () => {
-    window.removeEventListener("pointermove", onMove);
-    window.removeEventListener("pointerup", onUp);
-    if (!moved) return;
-    block.dataset.dragged = "1"; // suprime el click posterior
-    segments.select(seg.id);
-    segments.updateTiming(seg.id, cur.start, cur.end); // reconstruye bloques + snapshot
+  // Finaliza una sola vez (pointerup confirma; cancel/pérdida de captura limpia).
+  const finish = (commit: boolean) => {
+    if (done) return;
+    done = true;
+    block.removeEventListener("pointermove", onMove);
+    block.removeEventListener("pointerup", onPointerUp);
+    block.removeEventListener("pointercancel", onCancel);
+    block.removeEventListener("lostpointercapture", onCancel);
+    if (commit && moved) {
+      suppressSeekUntil = performance.now() + 300; // ignora el click de scrub
+      segments.select(seg.id);
+      segments.updateTiming(seg.id, cur.start, cur.end); // reconstruye + snapshot
+    }
   };
-  window.addEventListener("pointermove", onMove);
-  window.addEventListener("pointerup", onUp);
+  const onPointerUp = () => finish(true);
+  const onCancel = () => finish(false);
+  block.addEventListener("pointermove", onMove);
+  block.addEventListener("pointerup", onPointerUp);
+  block.addEventListener("pointercancel", onCancel);
+  block.addEventListener("lostpointercapture", onCancel);
 }
 
 export function setPlayhead(time: number): void {

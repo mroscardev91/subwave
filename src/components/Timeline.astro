@@ -15,8 +15,13 @@ const e = ui[lang].app.editor;
     <span class="font-mono text-[11px] uppercase tracking-wide text-on-deep-soft">{e.timeline}</span>
   </div>
   <div data-editor="timeline-ruler" class="relative h-4 text-on-deep-soft"></div>
-  <div data-editor="timeline-track" role="slider" tabindex="0" aria-label={e.timeline} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="relative mt-1 h-16 cursor-pointer overflow-hidden rounded-lg border border-on-deep-soft/15 bg-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
-    <div data-editor="timeline-blocks" class="absolute inset-0"></div>
+  <div class="relative mt-1 h-16 overflow-hidden rounded-lg border border-on-deep-soft/15 bg-deep">
+    <!-- Superficie de scrub (slider). Los bloques son HERMANOS, no descendientes,
+         para no anidar botones dentro de un role="slider" (ARIA válido). -->
+    <div data-editor="timeline-track" role="slider" tabindex="0" aria-label={e.timeline} aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" class="absolute inset-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-aqua"></div>
+    <!-- pointer-events-none deja pasar el click de zonas vacías al track; cada
+         bloque reactiva sus eventos (ver .timeline-block en global.css). -->
+    <div data-editor="timeline-blocks" class="pointer-events-none absolute inset-0"></div>
     <div data-editor="timeline-playhead" class="pointer-events-none absolute top-0 bottom-0 left-0 z-10 w-0.5 bg-aqua" style="left:0%"></div>
   </div>
 </div>

@@ -84,7 +84,7 @@
 .timeline-block.is-selected { border-color: var(--color-aqua); box-shadow: 0 0 0 1px var(--color-aqua); }
 .timeline-block:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
 /* Arrastre: mover el bloque o redimensionarlo por los bordes. */
-.timeline-block { cursor: grab; touch-action: none; }
+.timeline-block { cursor: grab; touch-action: none; pointer-events: auto; }
 .timeline-block:active { cursor: grabbing; }
 .timeline-block .tl-text {
   pointer-events: none; /* el arrastre lo captura el bloque */
