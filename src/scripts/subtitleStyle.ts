@@ -66,9 +66,10 @@ export function hexToRgba(hex: string, alpha: number): string {
  * pequeñas (vídeo vertical), y las palabras largas se parten (overflow-wrap).
  */
 export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
+  const size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, style.size));
   el.style.fontFamily = FONT_STACK[style.font];
   el.style.fontWeight = String(style.weight);
-  el.style.fontSize = `clamp(${Math.round(13 * style.size)}px, ${(2.4 * style.size).toFixed(2)}vw, ${Math.round(28 * style.size)}px)`;
+  el.style.fontSize = `clamp(${Math.round(13 * size)}px, ${(2.4 * size).toFixed(2)}vw, ${Math.round(28 * size)}px)`;
   el.style.lineHeight = "1.28";
   el.style.color = style.color;
   el.style.backgroundColor = style.bgOpacity > 0 ? hexToRgba(style.bg, style.bgOpacity) : "transparent";

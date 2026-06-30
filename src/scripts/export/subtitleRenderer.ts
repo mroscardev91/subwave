@@ -2,7 +2,7 @@
 // del editor — "lo que ves es lo que exportas". Se usa para quemar subtítulos
 // en el vídeo (WebCodecs y MediaRecorder).
 
-import { hexToRgba, type SubtitleStyle, type SubtitleFont } from "@/scripts/subtitleStyle";
+import { hexToRgba, SIZE_MIN, SIZE_MAX, type SubtitleStyle, type SubtitleFont } from "@/scripts/subtitleStyle";
 
 const FONT_STACK: Record<SubtitleFont, string> = {
   sans: "Outfit, ui-sans-serif, system-ui, sans-serif",
@@ -66,7 +66,8 @@ export function drawSubtitle(
 ): void {
   if (!text.trim()) return;
 
-  const fontPx = Math.round(height * FONT_HEIGHT_RATIO * style.size);
+  const size = Math.min(SIZE_MAX, Math.max(SIZE_MIN, style.size));
+  const fontPx = Math.round(height * FONT_HEIGHT_RATIO * size);
   const lineHeight = fontPx * 1.28;
   const padX = fontPx * 0.5;
   const padY = fontPx * 0.3;
