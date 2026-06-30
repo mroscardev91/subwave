@@ -33,3 +33,4 @@ pnpm-debug.log*
 # FFmpeg core copiado en build (no commitear ~32MB)
 public/ffmpeg/
 .vercel
+public/ort/

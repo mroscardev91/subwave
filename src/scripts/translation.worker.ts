@@ -8,6 +8,8 @@ import { env, pipeline } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true;
+// Backend ONNX wasm self-hosteado (public/ort/), no desde el CDN de jsdelivr.
+env.backends.onnx.wasm.wasmPaths = "/ort/";
 
 // `any` acotado a la frontera con la librería ML.
 let translator: any = null;

@@ -6,6 +6,9 @@ import { env, pipeline } from "@huggingface/transformers";
 
 env.allowLocalModels = false;
 env.useBrowserCache = true; // cachea pesos en IndexedDB
+// Backend ONNX wasm self-hosteado (public/ort/), no desde el CDN de jsdelivr:
+// transformers.js solo pone el default del CDN si wasmPaths está vacío.
+env.backends.onnx.wasm.wasmPaths = "/ort/";
 
 // `any` acotado a la frontera con la librería ML.
 let recognizer: any = null;

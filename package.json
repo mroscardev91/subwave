@@ -30,10 +30,10 @@
     "node": ">=22.12"
   },
   "scripts": {
-    "copy:ffmpeg": "node scripts/copy-ffmpeg-core.mjs",
-    "predev": "pnpm copy:ffmpeg",
+    "copy:assets": "node scripts/copy-runtime-assets.mjs",
+    "predev": "pnpm copy:assets",
     "dev": "astro dev",
-    "prebuild": "pnpm copy:ffmpeg",
+    "prebuild": "pnpm copy:assets",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"
