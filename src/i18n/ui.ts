@@ -68,6 +68,15 @@ export interface UIStrings {
         mono: string;
       };
     };
+    exportModal: {
+      title: string;
+      srt: string;
+      srtHint: string;
+      video: string;
+      videoHint: string;
+      webmNote: string;
+      close: string;
+    };
   };
   /** Strings serialized to window.__I18N__ for runtime scripts. */
   client: {
@@ -102,6 +111,10 @@ export interface UIStrings {
       mediaPlay: string;
       mediaPause: string;
       original: string;
+    };
+    export: {
+      rendering: string;
+      error: string;
     };
   };
 }
@@ -218,6 +231,15 @@ export const ui: Record<Lang, UIStrings> = {
           mono: "Mono",
         },
       },
+      exportModal: {
+        title: "Export",
+        srt: "Subtitles (.srt)",
+        srtHint: "A standard subtitle file for any player or editor.",
+        video: "Video with subtitles",
+        videoHint: "Your video with the captions burned in.",
+        webmNote: "Exports as MP4 (WebM on older browsers).",
+        close: "Close",
+      },
     },
     client: {
       appName: "Subwave",
@@ -251,6 +273,10 @@ export const ui: Record<Lang, UIStrings> = {
         mediaPlay: "Play",
         mediaPause: "Pause",
         original: "Original",
+      },
+      export: {
+        rendering: "Rendering video…",
+        error: "Export failed. Please try again.",
       },
     },
   },
@@ -366,6 +392,15 @@ export const ui: Record<Lang, UIStrings> = {
           mono: "Mono",
         },
       },
+      exportModal: {
+        title: "Exportar",
+        srt: "Subtítulos (.srt)",
+        srtHint: "Un archivo de subtítulos estándar para cualquier reproductor o editor.",
+        video: "Vídeo con subtítulos",
+        videoHint: "Tu vídeo con los subtítulos quemados.",
+        webmNote: "Se exporta en MP4 (WebM en navegadores antiguos).",
+        close: "Cerrar",
+      },
     },
     client: {
       appName: "Subwave",
@@ -399,6 +434,10 @@ export const ui: Record<Lang, UIStrings> = {
         mediaPlay: "Reproducir",
         mediaPause: "Pausar",
         original: "Original",
+      },
+      export: {
+        rendering: "Renderizando vídeo…",
+        error: "El export falló. Inténtalo de nuevo.",
       },
     },
   },

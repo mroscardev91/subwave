@@ -2,6 +2,7 @@
 import UploadStage from "@/components/UploadStage.astro";
 import ConfigStage from "@/components/ConfigStage.astro";
 import EditorStage from "@/components/EditorStage.astro";
+import ExportModal from "@/components/ExportModal.astro";
 import { ui } from "@/i18n/ui";
 import type { Lang } from "@/i18n/locales";
 
@@ -56,6 +57,8 @@ const steps: { key: "upload" | "config" | "editor"; label: string }[] = [
     <ConfigStage lang={lang} />
     <EditorStage lang={lang} />
   </main>
+
+  <ExportModal lang={lang} />
 </div>
 
 <script>

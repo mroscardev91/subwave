@@ -6,6 +6,7 @@ import { init, enterApp, exitApp, next, back, goTo, type StageName } from "@/scr
 import { initUploadStage } from "@/scripts/stages/uploadStage";
 import { initConfigStage } from "@/scripts/stages/configStage";
 import { initEditorStage } from "@/scripts/stages/editorStage";
+import { initExportModal } from "@/scripts/export/exportModal";
 
 function onReady(fn: () => void): void {
   if (document.readyState !== "loading") fn();
@@ -17,6 +18,7 @@ onReady(() => {
   initUploadStage();
   initConfigStage();
   initEditorStage();
+  initExportModal();
 
   document.addEventListener("click", (event) => {
     const trigger = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");
