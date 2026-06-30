@@ -2,7 +2,7 @@
 // overlay del preview y, más adelante, al export quemado.
 
 export type SubtitleFont = "sans" | "serif" | "mono";
-export type SubtitlePosition = "top" | "middle" | "bottom";
+export type SubtitlePosition = "top" | "middle" | "bottom" | "custom";
 
 export interface SubtitleStyle {
   font: SubtitleFont;
@@ -13,10 +13,15 @@ export interface SubtitleStyle {
   bgOpacity: number; // 0..1
   outline: boolean; // contorno/sombra del texto
   position: SubtitlePosition;
+  customX: number; // posición libre (centro), 0..100 % del frame
+  customY: number; // posición libre (centro), 0..100 % del frame
 }
 
 export const SIZE_MIN = 0.7;
 export const SIZE_MAX = 1.6;
+// Márgenes (fracción de la altura del frame) para arriba/abajo.
+export const MARGIN_TOP = 0.08;
+export const MARGIN_BOTTOM = 0.06;
 
 export const defaultSubtitleStyle: SubtitleStyle = {
   font: "sans",
@@ -27,6 +32,8 @@ export const defaultSubtitleStyle: SubtitleStyle = {
   bgOpacity: 0.55,
   outline: true,
   position: "bottom",
+  customX: 50,
+  customY: 90,
 };
 
 // Presets con la misma forma que las "plantillas" de subvid.
@@ -77,12 +84,34 @@ export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
   el.style.overflowWrap = "anywhere";
   el.style.whiteSpace = "pre-line";
   el.style.setProperty("text-wrap", "balance");
+  el.style.pointerEvents = "auto"; // arrastrable para posición libre
+  el.style.cursor = "grab";
+  el.style.touchAction = "none";
   el.style.textShadow = style.outline && style.bgOpacity === 0
     ? "0 1px 2px rgba(0,0,0,0.95), 0 0 4px rgba(0,0,0,0.9)"
     : "none";
 }
 
-/** Alineación vertical del overlay según la posición. */
-export function positionToAlign(position: SubtitlePosition): string {
-  return position === "top" ? "flex-start" : position === "middle" ? "center" : "flex-end";
+/**
+ * Coloca el bocadillo (absoluto) dentro del overlay según la posición. Arriba con
+ * margen del 8%, abajo con margen del 6% (anclado por su borde), centro al medio,
+ * y "custom" en customX/customY (centro). Coincide con el cálculo del export.
+ */
+export function positionBubble(el: HTMLElement, style: SubtitleStyle): void {
+  el.style.position = "absolute";
+  el.style.left = "50%";
+  if (style.position === "custom") {
+    el.style.left = `${Math.min(100, Math.max(0, style.customX))}%`;
+    el.style.top = `${Math.min(100, Math.max(0, style.customY))}%`;
+    el.style.transform = "translate(-50%, -50%)";
+  } else if (style.position === "top") {
+    el.style.top = `${MARGIN_TOP * 100}%`;
+    el.style.transform = "translate(-50%, 0)";
+  } else if (style.position === "middle") {
+    el.style.top = "50%";
+    el.style.transform = "translate(-50%, -50%)";
+  } else {
+    el.style.top = `${(1 - MARGIN_BOTTOM) * 100}%`;
+    el.style.transform = "translate(-50%, -100%)";
+  }
 }

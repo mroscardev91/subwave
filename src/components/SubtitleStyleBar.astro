@@ -69,14 +69,23 @@ const select =
       <input type="checkbox" data-style="outline" class="h-4 w-4 accent-aqua" />
       {sb.outline}
     </label>
-    <label class={field}>
+    <div class={field}>
       {sb.position}
-      <select data-style="position" class={select}>
-        <option value="top">{sb.top}</option>
-        <option value="middle">{sb.middle}</option>
-        <option value="bottom">{sb.bottom}</option>
-      </select>
-    </label>
+      <div class="pos-seg" role="group" aria-label={sb.position}>
+        <button type="button" data-pos="top" aria-label={sb.top} title={sb.top} aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="6" width="6" height="6" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button type="button" data-pos="middle" aria-label={sb.middle} title={sb.middle} aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="5" width="6" height="6" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button type="button" data-pos="bottom" aria-label={sb.bottom} title={sb.bottom} aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="4" width="6" height="6" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button type="button" data-pos="custom" aria-label={sb.custom} title={sb.custom} aria-pressed="false">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l4 10 1.4-3.6L12 8z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -102,4 +111,27 @@ const select =
     background: color-mix(in oklab, var(--color-aqua) 12%, var(--color-deep-soft));
   }
   .preset-chip.is-active .font-display { color: var(--color-aqua); }
+
+  /* Segmento de posición (arriba/centro/abajo/libre), estilo subvid. */
+  .pos-seg {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 25%, transparent);
+    background: var(--color-deep);
+  }
+  .pos-seg button {
+    display: grid;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 7px;
+    color: var(--color-on-deep-soft);
+    transition: background 0.15s, color 0.15s;
+  }
+  .pos-seg button svg { width: 1rem; height: 1rem; }
+  .pos-seg button:hover { color: var(--color-on-deep); background: color-mix(in oklab, var(--color-on-deep-soft) 12%, transparent); }
+  .pos-seg button:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+  .pos-seg button[aria-pressed="true"] { background: var(--color-aqua); color: var(--color-deep); }
 </style>

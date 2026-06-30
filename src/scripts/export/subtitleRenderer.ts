@@ -2,7 +2,7 @@
 // del editor — "lo que ves es lo que exportas". Se usa para quemar subtítulos
 // en el vídeo (WebCodecs y MediaRecorder).
 
-import { hexToRgba, SIZE_MIN, SIZE_MAX, type SubtitleStyle, type SubtitleFont } from "@/scripts/subtitleStyle";
+import { hexToRgba, SIZE_MIN, SIZE_MAX, MARGIN_TOP, MARGIN_BOTTOM, type SubtitleStyle, type SubtitleFont } from "@/scripts/subtitleStyle";
 
 const FONT_STACK: Record<SubtitleFont, string> = {
   sans: "Outfit, ui-sans-serif, system-ui, sans-serif",
@@ -106,14 +106,21 @@ export function drawSubtitle(
   const maxBlockW = width * MAX_WIDTH_RATIO;
   const blockH = lines.length * lineHeight;
 
-  // Baseline de la primera línea según la posición; en "bottom" el bloque crece
-  // hacia arriba desde el margen inferior (6%), así nunca rebasa el frame.
+  // Baseline de la primera línea + centro horizontal según la posición. Coincide
+  // con el posicionado de la preview (positionBubble): arriba 8%, abajo 6%,
+  // centro al medio, "custom" centrado en customX/customY.
   let baseTop: number;
-  if (style.position === "top") baseTop = height * 0.08 + fontPx;
-  else if (style.position === "middle") baseTop = (height - blockH) / 2 + fontPx;
-  else baseTop = height - height * 0.06 - (lines.length - 1) * lineHeight;
-
-  const cx = width / 2;
+  let cx = width / 2;
+  if (style.position === "custom") {
+    cx = width * (Math.min(100, Math.max(0, style.customX)) / 100);
+    baseTop = height * (Math.min(100, Math.max(0, style.customY)) / 100) - blockH / 2 + fontPx;
+  } else if (style.position === "top") {
+    baseTop = height * MARGIN_TOP + fontPx;
+  } else if (style.position === "middle") {
+    baseTop = (height - blockH) / 2 + fontPx;
+  } else {
+    baseTop = height - height * MARGIN_BOTTOM - (lines.length - 1) * lineHeight;
+  }
 
   // Un único fondo para todo el bloque (como el bocadillo de la preview).
   if (style.bgOpacity > 0) {

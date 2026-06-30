@@ -10,7 +10,7 @@ import * as history from "@/scripts/editorHistory";
 import * as timeline from "@/scripts/timeline";
 import { translateSegments } from "@/scripts/translate";
 import { languageOptions, langLabel } from "@/scripts/languages";
-import { applyBubbleStyle, positionToAlign, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
+import { applyBubbleStyle, positionBubble, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
 import { fitSubtitle } from "@/scripts/export/subtitleRenderer";
 
 const measureCanvas = typeof document !== "undefined" ? document.createElement("canvas") : null;
@@ -160,16 +160,11 @@ function layoutOverlay(): void {
     overlay.style.top = `${Math.round((cH - h) / 2)}px`;
     overlay.style.width = `${Math.round(w)}px`;
     overlay.style.height = `${Math.round(h)}px`;
-    // Padding solo vertical (margen 6% arriba/abajo). El margen horizontal lo da
-    // el max-width 80% del bocadillo; con padding horizontal el ancho real se
-    // reducía dos veces y el texto saltaba a más líneas en cajas estrechas.
-    overlay.style.padding = `${Math.max(4, Math.round(h * 0.06))}px 0`;
   } else {
     overlay.style.left = "0";
     overlay.style.top = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
-    overlay.style.padding = "1.5rem 0";
   }
   updateBubbleFont();
 }
@@ -338,10 +333,70 @@ function wireStyleControls(): void {
     session.style.outline = (e.target as HTMLInputElement).checked;
     applyStyle();
   });
-  styleEl<HTMLSelectElement>("position").addEventListener("change", (e) => {
-    session.style.position = (e.target as HTMLSelectElement).value as SubtitlePosition;
-    applyStyle();
+  for (const btn of stage.querySelectorAll<HTMLButtonElement>("[data-pos]")) {
+    btn.addEventListener("click", () => {
+      session.style.position = btn.dataset.pos as SubtitlePosition;
+      applyStyle();
+    });
+  }
+  initBubbleDrag();
+}
+
+function setActivePosition(): void {
+  for (const btn of stage.querySelectorAll<HTMLButtonElement>("[data-pos]")) {
+    btn.setAttribute("aria-pressed", String(btn.dataset.pos === session.style.position));
+  }
+}
+
+// Arrastrar el bocadillo lo coloca libremente (posición "custom"). customX/customY
+// son el centro en % de la caja del vídeo (overlay).
+function initBubbleDrag(): void {
+  bubble.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    e.stopPropagation(); // no disparar play/pause del preview
+    const ov = overlay.getBoundingClientRect();
+    const b = bubble.getBoundingClientRect();
+    const offX = e.clientX - (b.left + b.width / 2);
+    const offY = e.clientY - (b.top + b.height / 2);
+    let done = false;
+    try {
+      bubble.setPointerCapture(e.pointerId);
+    } catch {
+      /* sin captura igual funciona dentro de la ventana */
+    }
+    const onMove = (ev: PointerEvent) => {
+      bubble.style.cursor = "grabbing";
+      const cx = ev.clientX - offX;
+      const cy = ev.clientY - offY;
+      session.style.position = "custom";
+      session.style.customX = Math.min(100, Math.max(0, ((cx - ov.left) / ov.width) * 100));
+      session.style.customY = Math.min(100, Math.max(0, ((cy - ov.top) / ov.height) * 100));
+      positionBubble(bubble, session.style);
+      setActivePosition();
+    };
+    const finish = () => {
+      if (done) return;
+      done = true;
+      bubble.style.cursor = "grab";
+      bubble.removeEventListener("pointermove", onMove);
+      bubble.removeEventListener("pointerup", finish);
+      bubble.removeEventListener("pointercancel", finish);
+      refreshPresetChips();
+    };
+    bubble.addEventListener("pointermove", onMove);
+    bubble.addEventListener("pointerup", finish);
+    bubble.addEventListener("pointercancel", finish);
   });
+}
+
+function refreshPresetChips(): void {
+  const active = activePresetId();
+  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
+    const on = chip.dataset.preset === active;
+    chip.classList.toggle("is-active", on);
+    chip.setAttribute("aria-pressed", String(on));
+  }
 }
 
 function wirePresets(): void {
@@ -380,26 +435,16 @@ function applyStyleToControls(): void {
   styleEl<HTMLInputElement>("bg").value = s.bg;
   styleEl<HTMLInputElement>("bgOpacity").value = String(Math.round(s.bgOpacity * 100));
   styleEl<HTMLInputElement>("outline").checked = s.outline;
-  styleEl<HTMLSelectElement>("position").value = s.position;
-  const active = activePresetId();
-  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
-    const on = chip.dataset.preset === active;
-    chip.classList.toggle("is-active", on);
-    chip.setAttribute("aria-pressed", String(on));
-  }
+  setActivePosition();
+  refreshPresetChips();
 }
 
 function applyStyle(): void {
   applyBubbleStyle(bubble, session.style);
+  positionBubble(bubble, session.style);
   updateBubbleFont(); // recalcula el tamaño (encaje en 2 líneas) según el estilo
-  overlay.style.alignItems = positionToAlign(session.style.position);
-  // refleja el preset activo en los chips sin re-set de los controles finos
-  const active = activePresetId();
-  for (const chip of stage.querySelectorAll<HTMLElement>("[data-preset]")) {
-    const on = chip.dataset.preset === active;
-    chip.classList.toggle("is-active", on);
-    chip.setAttribute("aria-pressed", String(on));
-  }
+  setActivePosition();
+  refreshPresetChips();
 }
 
 // ---- tarjetas de segmento ----

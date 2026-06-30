@@ -63,6 +63,7 @@ export interface UIStrings {
         top: string;
         middle: string;
         bottom: string;
+        custom: string;
         sans: string;
         serif: string;
         mono: string;
@@ -226,6 +227,7 @@ export const ui: Record<Lang, UIStrings> = {
           top: "Top",
           middle: "Middle",
           bottom: "Bottom",
+          custom: "Custom",
           sans: "Sans",
           serif: "Serif",
           mono: "Mono",
@@ -387,6 +389,7 @@ export const ui: Record<Lang, UIStrings> = {
           top: "Arriba",
           middle: "Centro",
           bottom: "Abajo",
+          custom: "Libre",
           sans: "Sans",
           serif: "Serif",
           mono: "Mono",
