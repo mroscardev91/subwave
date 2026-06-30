@@ -10,11 +10,30 @@ const FONT_STACK: Record<SubtitleFont, string> = {
   mono: "JetBrains Mono, ui-monospace, monospace",
 };
 
+// Parte una palabra más ancha que maxWidth en trozos por caracteres (para que
+// una palabra larga nunca se salga del frame), como hace subvid.
+function splitLongWord(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, word: string, maxWidth: number): string[] {
+  if (ctx.measureText(word).width <= maxWidth) return [word];
+  const chunks: string[] = [];
+  let cur = "";
+  for (const ch of word) {
+    if (cur && ctx.measureText(cur + ch).width > maxWidth) {
+      chunks.push(cur);
+      cur = ch;
+    } else {
+      cur += ch;
+    }
+  }
+  if (cur) chunks.push(cur);
+  return chunks;
+}
+
 function wrap(ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = [];
   for (const paragraph of text.split("\n")) {
     let line = "";
-    for (const word of paragraph.split(/\s+/)) {
+    const words = paragraph.split(/\s+/).flatMap((w) => splitLongWord(ctx, w, maxWidth));
+    for (const word of words) {
       const candidate = line ? `${line} ${word}` : word;
       if (ctx.measureText(candidate).width > maxWidth && line) {
         lines.push(line);

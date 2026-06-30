@@ -61,17 +61,22 @@ export function hexToRgba(hex: string, alpha: number): string {
 }
 
 /**
- * Estilo inline del "bocadillo" de texto del subtítulo. NO fija el tamaño de
- * fuente: lo calcula el editor a partir de la altura del frame mostrado
- * (altura · 0.052 · size) para que coincida con la exportación.
+ * Estilo inline del "bocadillo" de texto del subtítulo en la preview. Igual que
+ * subvid: el tamaño se acota con clamp(...,28px·size) para no desbordar en cajas
+ * pequeñas (vídeo vertical), y las palabras largas se parten (overflow-wrap).
  */
 export function applyBubbleStyle(el: HTMLElement, style: SubtitleStyle): void {
   el.style.fontFamily = FONT_STACK[style.font];
   el.style.fontWeight = String(style.weight);
+  el.style.fontSize = `clamp(${Math.round(13 * style.size)}px, ${(2.4 * style.size).toFixed(2)}vw, ${Math.round(28 * style.size)}px)`;
+  el.style.lineHeight = "1.28";
   el.style.color = style.color;
   el.style.backgroundColor = style.bgOpacity > 0 ? hexToRgba(style.bg, style.bgOpacity) : "transparent";
-  el.style.padding = style.bgOpacity > 0 ? "0.3em 0.5em" : "0";
-  el.style.borderRadius = "0.18em";
+  el.style.padding = style.bgOpacity > 0 ? "0.22em 0.55em" : "0";
+  el.style.borderRadius = "0.3em";
+  el.style.overflowWrap = "anywhere";
+  el.style.whiteSpace = "pre-line";
+  el.style.setProperty("text-wrap", "balance");
   el.style.textShadow = style.outline && style.bgOpacity === 0
     ? "0 1px 2px rgba(0,0,0,0.95), 0 0 4px rgba(0,0,0,0.9)"
     : "none";
