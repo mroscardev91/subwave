@@ -1,30 +1,17 @@
-// Modal de export: descarga .srt (siempre) y vídeo con subtítulos quemados
-// (solo si la sesión es vídeo). Opera sobre la pista activa.
+// Controles de export en la barra superior del editor (estilo subvid, inline):
+// descargar .srt, formato (MP4/WebM), calidad y descargar vídeo con subtítulos
+// quemados. Sin modal: el progreso/errores se muestran en un estado aria-live.
 
 import { session } from "@/scripts/session";
 import { toSrt } from "@/scripts/subtitles";
-import { exportVideo } from "@/scripts/export/videoExport";
+import { exportVideo, type ExportFormat, type ExportQuality } from "@/scripts/export/videoExport";
 
-let overlay: HTMLElement;
 let srtBtn: HTMLButtonElement;
 let videoBtn: HTMLButtonElement;
-let closeBtn: HTMLButtonElement;
-let progress: HTMLElement;
+let formatSel: HTMLSelectElement;
+let qualitySel: HTMLSelectElement;
 let statusEl: HTMLElement;
-let pctEl: HTMLElement;
-let bar: HTMLElement;
-let errorEl: HTMLElement;
-let lastFocus: HTMLElement | null = null;
 let exporting = false;
-
-// Saca el resto de la app del orden de tabulación y del árbol de accesibilidad
-// mientras el modal está abierto (trampa de foco para el diálogo modal).
-function setBackgroundInert(on: boolean): void {
-  for (const el of document.querySelectorAll("#app > main, #app > header")) {
-    if (on) el.setAttribute("inert", "");
-    else el.removeAttribute("inert");
-  }
-}
 
 function download(blob: Blob, name: string): void {
   const url = URL.createObjectURL(blob);
@@ -42,87 +29,46 @@ function activeLang(): string {
   return session.tracks[session.activeTrack]?.lang ?? "";
 }
 
-function open(): void {
-  lastFocus = document.activeElement as HTMLElement;
-  videoBtn.disabled = session.kind !== "video" || !session.objectUrl || !session.file;
-  progress.hidden = true;
-  errorEl.hidden = true;
-  srtBtn.disabled = false;
-  overlay.hidden = false;
-  setBackgroundInert(true);
-  closeBtn.focus();
-}
-
-function close(): void {
-  if (exporting) return; // no cerrar a mitad de un render
-  overlay.hidden = true;
-  setBackgroundInert(false);
-  lastFocus?.focus();
-}
-
-function setBar(ratio: number): void {
-  const pct = Math.round(ratio * 100);
-  bar.style.width = `${pct}%`;
-  pctEl.textContent = `${pct}%`;
-  bar.parentElement?.setAttribute("aria-valuenow", String(pct));
+function setBusy(busy: boolean): void {
+  exporting = busy;
+  srtBtn.disabled = busy;
+  videoBtn.disabled = busy || session.kind !== "video" || !session.objectUrl || !session.file;
+  formatSel.disabled = busy;
+  qualitySel.disabled = busy;
 }
 
 async function runVideo(): Promise<void> {
   if (exporting || session.kind !== "video" || !session.objectUrl || !session.file) return;
-  exporting = true;
   const t = window.__I18N__.export;
-  srtBtn.disabled = true;
-  videoBtn.disabled = true;
-  closeBtn.disabled = true;
-  errorEl.hidden = true;
-  progress.hidden = false;
-  statusEl.textContent = t.rendering;
-  setBar(0);
-  progress.focus(); // el botón activo se deshabilita; mantén el foco dentro del diálogo
+  setBusy(true);
+  statusEl.textContent = `${t.generating} 0%`;
   try {
-    // Asegura que la fuente (Outfit) esté cargada para el canvas del export, así
-    // el quemado usa la misma tipografía que la preview (mismo reparto en líneas).
     if (document.fonts?.ready) await document.fonts.ready;
     const { blob, ext } = await exportVideo(
       { file: session.file, objectUrl: session.objectUrl },
       session.segments,
       session.style,
-      setBar,
+      { format: formatSel.value as ExportFormat, quality: qualitySel.value as ExportQuality },
+      (ratio) => {
+        statusEl.textContent = `${t.generating} ${Math.round(ratio * 100)}%`;
+      },
     );
     download(blob, `${baseName()}-${activeLang()}.${ext}`);
-    progress.hidden = true;
+    statusEl.textContent = "";
   } catch {
-    progress.hidden = true;
-    errorEl.textContent = t.error;
-    errorEl.hidden = false;
+    statusEl.textContent = t.error;
   } finally {
-    srtBtn.disabled = false;
-    videoBtn.disabled = session.kind !== "video";
-    closeBtn.disabled = false;
-    exporting = false;
-    closeBtn.focus();
+    setBusy(false);
   }
 }
 
 export function initExportModal(): void {
-  overlay = document.querySelector<HTMLElement>('[data-export="overlay"]')!;
-  srtBtn = overlay.querySelector('[data-export="srt"]')!;
-  videoBtn = overlay.querySelector('[data-export="video"]')!;
-  closeBtn = overlay.querySelector('[data-export="close"]')!;
-  progress = overlay.querySelector('[data-export="progress"]')!;
-  statusEl = overlay.querySelector('[data-export="status"]')!;
-  pctEl = overlay.querySelector('[data-export="pct"]')!;
-  bar = overlay.querySelector('[data-export="bar"]')!;
-  errorEl = overlay.querySelector('[data-export="error"]')!;
-
-  document.querySelector('[data-editor="open-export"]')?.addEventListener("click", open);
-  closeBtn.addEventListener("click", close);
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) close();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (!overlay.hidden && e.key === "Escape") close();
-  });
+  srtBtn = document.querySelector('[data-export="srt"]')!;
+  if (!srtBtn) return;
+  videoBtn = document.querySelector('[data-export="video"]')!;
+  formatSel = document.querySelector('[data-export="format"]')!;
+  qualitySel = document.querySelector('[data-export="quality"]')!;
+  statusEl = document.querySelector('[data-export="status"]')!;
 
   srtBtn.addEventListener("click", () => {
     download(new Blob([toSrt(session.segments)], { type: "text/plain;charset=utf-8" }), `${baseName()}-${activeLang()}.srt`);

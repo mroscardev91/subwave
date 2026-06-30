@@ -44,6 +44,13 @@ export interface UIStrings {
       addLine: string;
       customize: string;
       animation: string;
+      srtBtn: string;
+      videoBtn: string;
+      format: string;
+      quality: string;
+      qOptimized: string;
+      qHigh: string;
+      qLossless: string;
       presets: {
         base: string;
         clean: string;
@@ -117,6 +124,7 @@ export interface UIStrings {
     export: {
       rendering: string;
       error: string;
+      generating: string;
     };
   };
 }
@@ -209,6 +217,13 @@ export const ui: Record<Lang, UIStrings> = {
         addLine: "Add line",
         customize: "Customize",
         animation: "Animation",
+        srtBtn: "Download subtitles (.srt)",
+        videoBtn: "Download video",
+        format: "Format",
+        quality: "Quality",
+        qOptimized: "Optimized",
+        qHigh: "High",
+        qLossless: "Lossless",
         presets: {
           base: "Base",
           clean: "Clean",
@@ -281,6 +296,7 @@ export const ui: Record<Lang, UIStrings> = {
       export: {
         rendering: "Rendering video…",
         error: "Export failed. Please try again.",
+        generating: "Generating",
       },
     },
   },
@@ -372,6 +388,13 @@ export const ui: Record<Lang, UIStrings> = {
         addLine: "Añadir línea",
         customize: "Personalizar",
         animation: "Animación",
+        srtBtn: "Descargar subtítulos (.srt)",
+        videoBtn: "Descargar vídeo",
+        format: "Formato",
+        quality: "Calidad",
+        qOptimized: "Optimizado",
+        qHigh: "Alta",
+        qLossless: "Sin pérdida",
         presets: {
           base: "Base",
           clean: "Limpio",
@@ -444,6 +467,7 @@ export const ui: Record<Lang, UIStrings> = {
       export: {
         rendering: "Renderizando vídeo…",
         error: "El export falló. Inténtalo de nuevo.",
+        generating: "Generando",
       },
     },
   },

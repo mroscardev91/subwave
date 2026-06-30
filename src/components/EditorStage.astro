@@ -36,11 +36,55 @@ const toolBtn =
       <span data-editor="filename" class="hidden max-w-[16rem] truncate font-mono text-xs text-on-deep-soft sm:block"></span>
     </div>
 
-    <button type="button" data-editor="open-export" class="inline-flex items-center gap-2 rounded-pill bg-aqua px-5 py-2.5 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep">
-      <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
-      {e.export}
-    </button>
+    <div class="flex items-center gap-2 sm:gap-3">
+      <button type="button" data-export="srt" class="inline-flex items-center gap-1.5 rounded-pill border border-on-deep-soft/30 px-3 py-2 text-sm text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span class="hidden sm:inline">{e.srtBtn}</span>
+      </button>
+
+      <label class="exp-field">
+        <span>{e.format}</span>
+        <select data-export="format" class="exp-select">
+          <option value="mp4">MP4</option>
+          <option value="webm">WebM</option>
+        </select>
+      </label>
+      <label class="exp-field">
+        <span>{e.quality}</span>
+        <select data-export="quality" class="exp-select">
+          <option value="optimized">{e.qOptimized}</option>
+          <option value="high">{e.qHigh}</option>
+          <option value="lossless">{e.qLossless}</option>
+        </select>
+      </label>
+
+      <span data-export="status" role="status" aria-live="polite" class="min-w-0 font-mono text-xs text-on-deep-soft"></span>
+
+      <button type="button" data-export="video" class="inline-flex items-center gap-2 rounded-pill bg-aqua px-5 py-2.5 font-medium text-deep transition hover:bg-aqua-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua focus-visible:ring-offset-2 focus-visible:ring-offset-deep disabled:cursor-not-allowed disabled:opacity-50">
+        <svg viewBox="0 0 16 16" class="h-4 w-4" aria-hidden="true"><path d="M8 2v8m0 0 3-3m-3 3L5 7M3 13h10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+        <span data-export="vlabel">{e.videoBtn}</span>
+      </button>
+    </div>
   </header>
+
+  <style>
+    .exp-field { display: flex; flex-direction: column; gap: 0.15rem; }
+    .exp-field > span {
+      font: 600 0.6rem/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-on-deep-soft);
+    }
+    .exp-select {
+      border-radius: 8px;
+      border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 30%, transparent);
+      background: var(--color-deep);
+      color: var(--color-on-deep);
+      padding: 0.35rem 0.5rem;
+      font-size: 0.8rem;
+    }
+    .exp-select:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+  </style>
 
   <div class="flex min-h-0 flex-1 flex-col lg:flex-row">
     <!-- Main: preview + playbar + presets -->

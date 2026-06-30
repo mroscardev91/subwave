@@ -15,7 +15,9 @@ import {
   EncodedPacketSink,
   EncodedAudioPacketSource,
   ALL_FORMATS,
+  QUALITY_MEDIUM,
   QUALITY_HIGH,
+  QUALITY_VERY_HIGH,
   getFirstEncodableVideoCodec,
 } from "mediabunny";
 
@@ -23,12 +25,19 @@ import { drawSubtitle } from "@/scripts/export/subtitleRenderer";
 import { segmentAt, wordsForSegment } from "@/scripts/subtitles";
 import type { Segment } from "@/scripts/subtitles";
 import type { SubtitleStyle } from "@/scripts/subtitleStyle";
-import type { VideoExportResult } from "@/scripts/export/videoExport";
+import type { VideoExportResult, ExportQuality } from "@/scripts/export/videoExport";
+
+const BITRATE = {
+  optimized: QUALITY_MEDIUM,
+  high: QUALITY_HIGH,
+  lossless: QUALITY_VERY_HIGH,
+};
 
 export async function exportMp4(
   file: Blob,
   segments: Segment[],
   style: SubtitleStyle,
+  quality: ExportQuality,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -48,7 +57,7 @@ export async function exportMp4(
 
     const format = new Mp4OutputFormat();
     const output = new Output({ format, target: new BufferTarget() });
-    const videoSource = new CanvasSource(canvas, { codec, bitrate: QUALITY_HIGH });
+    const videoSource = new CanvasSource(canvas, { codec, bitrate: BITRATE[quality] });
     output.addVideoTrack(videoSource);
 
     // Copia del audio original (sin transcodificar) si el formato MP4 lo admite.

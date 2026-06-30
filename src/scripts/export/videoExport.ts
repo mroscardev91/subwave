@@ -20,25 +20,39 @@ export interface VideoExportSource {
   objectUrl: string;
 }
 
+export type ExportFormat = "mp4" | "webm";
+export type ExportQuality = "optimized" | "high" | "lossless";
+export interface ExportOptions {
+  format: ExportFormat;
+  quality: ExportQuality;
+}
+
+// Bitrate del WebM (Camino B, MediaRecorder) según la calidad.
+const WEBM_BITRATE: Record<ExportQuality, number> = {
+  optimized: 2_500_000,
+  high: 6_000_000,
+  lossless: 16_000_000,
+};
+
 const hasWebCodecs = "VideoEncoder" in globalThis && "VideoFrame" in globalThis;
 
 export async function exportVideo(
   source: VideoExportSource,
   segments: Segment[],
   style: SubtitleStyle,
+  opts: ExportOptions,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
-  if (hasWebCodecs) {
+  // MP4 si lo pide y hay WebCodecs; si falla, cae al WebM universal.
+  if (opts.format === "mp4" && hasWebCodecs) {
     try {
       const { exportMp4 } = await import("@/scripts/export/videoExportMp4");
-      return await exportMp4(source.file, segments, style, onProgress);
+      return await exportMp4(source.file, segments, style, opts.quality, onProgress);
     } catch {
-      // WebCodecs presente pero el camino MP4 falló (códec no encodable, etc.):
-      // cae al fallback universal.
       onProgress(0);
     }
   }
-  return exportWebm(source.objectUrl, segments, style, onProgress);
+  return exportWebm(source.objectUrl, segments, style, opts.quality, onProgress);
 }
 
 // Camino B — canvas + MediaRecorder → WebM.
@@ -46,6 +60,7 @@ async function exportWebm(
   objectUrl: string,
   segments: Segment[],
   style: SubtitleStyle,
+  quality: ExportQuality,
   onProgress: (ratio: number) => void,
 ): Promise<VideoExportResult> {
   const video = document.createElement("video");
@@ -78,7 +93,7 @@ async function exportWebm(
   const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")
     ? "video/webm;codecs=vp9,opus"
     : "video/webm";
-  const recorder = new MediaRecorder(stream, { mimeType: mime });
+  const recorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: WEBM_BITRATE[quality] });
   const chunks: Blob[] = [];
   recorder.ondataavailable = (e) => {
     if (e.data.size) chunks.push(e.data);
