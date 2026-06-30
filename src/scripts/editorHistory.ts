@@ -26,8 +26,14 @@ export function reset(snap: EditorSnapshot): void {
   notify();
 }
 
-/** Registra una nueva instantánea tras una edición. */
+function sameAsTop(snap: EditorSnapshot): boolean {
+  const top = past[past.length - 1];
+  return !!top && JSON.stringify(top) === JSON.stringify(snap);
+}
+
+/** Registra una nueva instantánea tras una edición (ignora si no cambió nada). */
 export function record(snap: EditorSnapshot): void {
+  if (sameAsTop(snap)) return; // acción no-op: no ensucia el historial
   past.push(clone(snap));
   if (past.length > MAX) past.shift();
   future = [];

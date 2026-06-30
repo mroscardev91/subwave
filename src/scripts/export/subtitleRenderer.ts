@@ -138,7 +138,11 @@ export function drawSubtitle(
     ctx.fill();
   }
 
-  const animate = style.animate && !!anim && anim.words.length > 0;
+  // Karaoke solo si los tokens dibujados cuadran 1:1 con los tiempos por palabra.
+  // Si fitSubtitle tuvo que partir una palabra larga (splitLongWord), el conteo
+  // difiere y el resaltado se desincronizaría → dibuja plano ese caso.
+  const tokenCount = lines.reduce((n, l) => n + l.split(" ").filter(Boolean).length, 0);
+  const animate = style.animate && !!anim && anim.words.length > 0 && tokenCount === anim.words.length;
   const outline = style.outline && style.bgOpacity === 0;
 
   if (animate) {

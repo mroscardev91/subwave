@@ -342,7 +342,7 @@ let bubbleSig = "";
 // resaltado, sin tocar el DOM).
 function renderBubble(active: Segment | null): void {
   const text = active?.text ?? "";
-  const sig = `${active?.id ?? ""}|${session.style.animate ? 1 : 0}|${text}`;
+  const sig = `${active?.id ?? ""}|${session.style.animate ? 1 : 0}|${active?.start ?? 0}|${active?.end ?? 0}|${text}`;
   if (sig === bubbleSig) return;
   bubbleSig = sig;
   if (!text) {
@@ -455,6 +455,8 @@ function initBubbleDrag(): void {
     const ov = overlay.getBoundingClientRect();
     const b = bubble.getBoundingClientRect();
     const offY = e.clientY - (b.top + b.height / 2);
+    const startX = e.clientX;
+    const startY = e.clientY;
     let done = false;
     let moved = false;
     vguide.hidden = false; // eje Y visible al arrastrar
@@ -464,6 +466,7 @@ function initBubbleDrag(): void {
       /* sin captura igual funciona dentro de la ventana */
     }
     const onMove = (ev: PointerEvent) => {
+      if (!moved && Math.hypot(ev.clientX - startX, ev.clientY - startY) <= 3) return; // ignora jitter de clic
       moved = true;
       bubble.style.cursor = "grabbing";
       const cy = ev.clientY - offY;

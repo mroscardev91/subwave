@@ -42,6 +42,7 @@ export function setText(id: string, text: string): void {
   const seg = session.segments.find((s) => s.id === id);
   if (!seg || seg.text === text) return;
   seg.text = text;
+  delete seg.words; // los tiempos por palabra ya no corresponden al texto editado
 }
 
 /** Registra una instantánea del estado actual (al confirmar una edición). */
