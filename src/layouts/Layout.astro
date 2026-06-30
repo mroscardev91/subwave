@@ -20,6 +20,28 @@ const enHref = new URL(basePath, site);
 const esHref = new URL(`/es${basePath === "/" ? "/" : basePath}`, site);
 const ogImage = new URL("/og.png", site);
 const themeColor = bodyClass === "editor" ? "#070B10" : "#F3F4F2";
+
+// Datos estructurados: app web gratuita que corre en el navegador.
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Subwave",
+  url: site.href,
+  description: t.meta.description,
+  applicationCategory: "MultimediaApplication",
+  operatingSystem: "Web browser",
+  inLanguage: lang === "es" ? "es" : "en",
+  browserRequirements: "Requires JavaScript and WebAssembly",
+  isAccessibleForFree: true,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+  featureList: [
+    "AI subtitle transcription (Whisper)",
+    "Subtitle translation",
+    "Burn-in subtitles to MP4/WebM",
+    "Export .srt",
+    "Runs 100% in the browser — no uploads",
+  ],
+};
 ---
 
 <!doctype html>
@@ -31,6 +53,8 @@ const themeColor = bodyClass === "editor" ? "#070B10" : "#F3F4F2";
 
     <title>{t.meta.title}</title>
     <meta name="description" content={t.meta.description} />
+    <meta name="keywords" content={t.meta.keywords} />
+    <meta name="robots" content="index, follow" />
     <meta name="theme-color" content={themeColor} />
 
     <link rel="canonical" href={canonical} />
@@ -54,10 +78,13 @@ const themeColor = bodyClass === "editor" ? "#070B10" : "#F3F4F2";
     <meta property="og:image" content={ogImage} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.meta.title} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={t.meta.title} />
     <meta name="twitter:description" content={t.meta.description} />
     <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 
     {/* Client-side locale redirect: static site has no server middleware. */}
     <script is:inline>

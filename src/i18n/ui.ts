@@ -1,7 +1,7 @@
 import type { Lang } from "./locales";
 
 export interface UIStrings {
-  meta: { title: string; description: string };
+  meta: { title: string; description: string; keywords: string };
   nav: { how: string; privacy: string; start: string };
   hero: {
     badge: string;
@@ -122,9 +122,11 @@ export interface UIStrings {
 export const ui: Record<Lang, UIStrings> = {
   en: {
     meta: {
-      title: "Subwave — AI subtitles for any video",
+      title: "Subwave — Free AI subtitle generator in your browser",
       description:
-        "Generate, edit and translate subtitles with AI right in your browser. From sound to text — no uploads, no servers, your file never leaves your device.",
+        "Free AI subtitle generator in your browser: transcribe, translate and burn subtitles into your video, then export .srt or MP4. No uploads — your file stays on your device.",
+      keywords:
+        "AI subtitles, subtitle generator, automatic subtitles, video captions, transcribe video, translate subtitles, burn subtitles, add subtitles to video, SRT generator, video to text, free, in browser, no upload, private, Whisper",
     },
     nav: { how: "How it works", privacy: "Privacy", start: "Get started" },
     hero: {
@@ -283,9 +285,11 @@ export const ui: Record<Lang, UIStrings> = {
 
   es: {
     meta: {
-      title: "Subwave — Subtítulos con IA para cualquier vídeo",
+      title: "Subwave — Generador de subtítulos con IA en el navegador",
       description:
-        "Genera, edita y traduce subtítulos con IA en tu navegador. Del audio al texto: sin subidas ni servidores, tu archivo nunca sale de tu equipo.",
+        "Generador de subtítulos con IA en tu navegador: transcribe, traduce y quema subtítulos en tu vídeo, y exporta .srt o MP4. Sin subidas — tu archivo no sale de tu dispositivo.",
+      keywords:
+        "subtítulos con IA, generador de subtítulos, subtítulos automáticos, transcribir vídeo, traducir subtítulos, subtítulos quemados, poner subtítulos a un vídeo, generar SRT, vídeo a texto, gratis, en el navegador, sin subir archivos, privado, Whisper",
     },
     nav: { how: "Cómo funciona", privacy: "Privacidad", start: "Empezar" },
     hero: {
