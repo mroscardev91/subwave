@@ -91,6 +91,7 @@ export interface UIStrings {
       ready: string;
       kindVideo: string;
       kindAudio: string;
+      warnLarge: string;
       errorNoAudio: string;
       errorUnsupported: string;
       errorGeneric: string;
@@ -273,6 +274,7 @@ export const ui: Record<Lang, UIStrings> = {
         ready: "Audio ready",
         kindVideo: "Video",
         kindAudio: "Audio",
+        warnLarge: "Large or long file — in-browser transcription may take a while and use a lot of memory.",
         errorNoAudio: "That file has no audio track.",
         errorUnsupported: "Unsupported file type.",
         errorGeneric: "Couldn't process that file. Try another.",
@@ -454,6 +456,7 @@ export const ui: Record<Lang, UIStrings> = {
         ready: "Audio listo",
         kindVideo: "Vídeo",
         kindAudio: "Audio",
+        warnLarge: "Archivo grande o largo — la transcripción en el navegador puede tardar y usar bastante memoria.",
         errorNoAudio: "Ese archivo no tiene pista de audio.",
         errorUnsupported: "Tipo de archivo no soportado.",
         errorGeneric: "No se pudo procesar el archivo. Prueba con otro.",

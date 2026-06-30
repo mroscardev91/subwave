@@ -48,6 +48,12 @@ const accept =
       <button type="button" data-upload="reset" class="shrink-0 rounded-pill border border-on-deep-soft/30 px-4 py-2 text-sm font-medium text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:cursor-not-allowed disabled:opacity-40">{u.chooseAnother}</button>
     </div>
 
+    <!-- Aviso suave para archivos grandes/largos (no bloquea) -->
+    <p data-upload="warn" hidden role="status" class="mt-3 flex items-start gap-2 rounded-lg border border-on-deep-soft/20 bg-deep px-3 py-2 text-xs text-on-deep-soft">
+      <svg viewBox="0 0 16 16" class="mt-px h-4 w-4 shrink-0 text-aqua" aria-hidden="true"><path d="M8 1.5 15 14H1z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /><path d="M8 6.5v3.2M8 11.6v.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+      <span data-upload="warn-text"></span>
+    </p>
+
     <!-- Progress -->
     <div data-upload="progress" hidden class="mt-5">
       <div class="flex items-center justify-between text-sm text-on-deep-soft">

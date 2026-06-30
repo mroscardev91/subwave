@@ -8,6 +8,11 @@ import { session, setFile, setAudio, resetMedia, type MediaKind } from "@/script
 const VIDEO_EXT = ["mp4", "mov", "webm", "mkv"];
 const AUDIO_EXT = ["mp3", "wav", "ogg"];
 
+// Aviso suave (no bloquea): archivos grandes/largos tardan y consumen RAM al
+// procesarse en el navegador.
+const WARN_BYTES = 500 * 1024 * 1024; // 500 MB
+const WARN_SECONDS = 30 * 60; // 30 min
+
 // Token de generación: cada selección/reset lo incrementa; una extracción en
 // curso descarta su resultado si el token cambió (evita "completados zombi").
 let activeJob = 0;
@@ -58,7 +63,14 @@ export function initUploadStage(): void {
   const readyDur = q('[data-upload="ready-dur"]');
   const errorBox = q('[data-upload="error"]');
   const errorText = q('[data-upload="error-text"]');
+  const warnBox = q('[data-upload="warn"]');
+  const warnText = q('[data-upload="warn-text"]');
   const continueBtn = q<HTMLButtonElement>("#upload-continue");
+
+  const showWarn = () => {
+    warnText.textContent = t.warnLarge;
+    warnBox.hidden = false;
+  };
 
   const setBar = (ratio: number) => {
     const pct = Math.round(ratio * 100);
@@ -85,6 +97,7 @@ export function initUploadStage(): void {
     progress.hidden = true;
     ready.hidden = true;
     errorBox.hidden = true;
+    warnBox.hidden = true;
     resetBtn.disabled = false;
     dropzone.hidden = false;
     continueBtn.disabled = true;
@@ -93,6 +106,7 @@ export function initUploadStage(): void {
 
   async function onSelect(file: File): Promise<void> {
     const job = ++activeJob;
+    warnBox.hidden = true; // se reevalúa por tamaño/duración en cada selección
     const kind = detectKind(file);
     if (!kind) {
       // Show the selected panel just to host the error + "choose another".
@@ -110,9 +124,11 @@ export function initUploadStage(): void {
     selected.hidden = false;
     errorBox.hidden = true;
     ready.hidden = true;
+    warnBox.hidden = true;
     nameEl.textContent = file.name;
     metaEl.textContent = `${fmtSize(file.size)} · ${kind === "video" ? t.kindVideo : t.kindAudio}`;
     nameEl.focus();
+    if (file.size > WARN_BYTES) showWarn(); // por tamaño (la duración se sabe tras extraer)
 
     if (kind === "video") {
       previewVideo.src = session.objectUrl!;
@@ -149,6 +165,7 @@ export function initUploadStage(): void {
 
       if (job !== activeJob) return; // superado por un reset/nueva selección
       setAudio(result.audio, result.sampleRate, result.duration);
+      if (result.duration > WARN_SECONDS) showWarn(); // por duración real
       progress.hidden = true;
       ready.hidden = false;
       readyText.textContent = t.ready;
