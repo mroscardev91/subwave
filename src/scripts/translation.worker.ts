@@ -14,11 +14,25 @@ env.backends.onnx.wasm.wasmPaths = "/ort/";
 // `any` acotado a la frontera con la librería ML.
 let translator: any = null;
 let loadedModel = "";
+let loadingPromise: Promise<void> | null = null;
+let loadingModel = "";
 
 const post = (msg: any, transfer: Transferable[] = []) => (self as Window & typeof globalThis).postMessage(msg, transfer);
 
 async function ensure(model: string): Promise<void> {
   if (translator && loadedModel === model) return;
+  // Comparte la carga en vuelo si llega otra petición del mismo modelo.
+  if (loadingPromise && loadingModel === model) return loadingPromise;
+  loadingModel = model;
+  loadingPromise = load(model);
+  try {
+    await loadingPromise;
+  } finally {
+    loadingPromise = null;
+  }
+}
+
+async function load(model: string): Promise<void> {
   translator = await pipeline("translation", model, {
     // fp32 sin cuantizar: las variantes q8/int8 de estos modelos usan un op
     // MatMulNBits (4-bit) que el onnxruntime-web incluido no puede cargar

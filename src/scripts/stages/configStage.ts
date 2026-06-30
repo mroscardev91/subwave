@@ -9,7 +9,8 @@ import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
 
-const MODEL = "Xenova/whisper-base";
+export const ASR_MODEL = "Xenova/whisper-base";
+const MODEL = ASR_MODEL;
 
 export function initConfigStage(): void {
   const stage = document.querySelector<HTMLElement>('[data-stage="config"]');

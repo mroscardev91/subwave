@@ -13,11 +13,27 @@ env.backends.onnx.wasm.wasmPaths = "/ort/";
 // `any` acotado a la frontera con la librería ML.
 let recognizer: any = null;
 let loadedModel = "";
+// Carga en vuelo: el prefetch (al entrar) y el botón Transcribir pueden pedir el
+// MISMO modelo a la vez; sin esto se lanzarían dos pipeline() concurrentes (doble
+// descarga + doble modelo en RAM). Comparten la misma promesa.
+let loadingPromise: Promise<void> | null = null;
+let loadingModel = "";
 
 const post = (msg: any, transfer: Transferable[] = []) => (self as Window & typeof globalThis).postMessage(msg, transfer);
 
 async function ensure(model: string, webgpu: boolean): Promise<void> {
   if (recognizer && loadedModel === model) return;
+  if (loadingPromise && loadingModel === model) return loadingPromise;
+  loadingModel = model;
+  loadingPromise = load(model, webgpu);
+  try {
+    await loadingPromise;
+  } finally {
+    loadingPromise = null;
+  }
+}
+
+async function load(model: string, webgpu: boolean): Promise<void> {
   const common = {
     progress_callback: (p: any) => post({ type: "progress", key: "asr", payload: p }),
   };
