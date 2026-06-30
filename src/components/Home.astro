@@ -109,6 +109,13 @@ const home = `${localePath[lang]}/`;
           </li>
         ))}
       </ul>
+
+      <!-- Panel de modelos: estado de la caché de IA y botón para borrarla. -->
+      <div data-downloads class="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-on-deep-soft/15 pt-6 text-sm">
+        <span class="font-mono text-xs uppercase tracking-wide text-on-deep-soft">{t.client.downloads.title}</span>
+        <span data-downloads="status" role="status" aria-live="polite" class="text-on-deep-soft"></span>
+        <button type="button" data-downloads="clear" hidden class="rounded-pill border border-on-deep-soft/30 px-3 py-1.5 text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua disabled:opacity-50">{t.client.downloads.clear}</button>
+      </div>
     </div>
   </section>
 </main>

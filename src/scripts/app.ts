@@ -7,6 +7,7 @@ import { initUploadStage } from "@/scripts/stages/uploadStage";
 import { initConfigStage } from "@/scripts/stages/configStage";
 import { initEditorStage } from "@/scripts/stages/editorStage";
 import { initExportControls } from "@/scripts/export/exportBar";
+import { initDownloads } from "@/scripts/downloads";
 
 function onReady(fn: () => void): void {
   if (document.readyState !== "loading") fn();
@@ -19,6 +20,7 @@ onReady(() => {
   initConfigStage();
   initEditorStage();
   initExportControls();
+  initDownloads();
 
   document.addEventListener("click", (event) => {
     const trigger = (event.target as HTMLElement).closest<HTMLElement>("[data-action]");

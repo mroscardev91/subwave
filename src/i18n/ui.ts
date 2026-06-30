@@ -116,6 +116,14 @@ export interface UIStrings {
       error: string;
       generating: string;
     };
+    downloads: {
+      title: string;
+      cached: string;
+      empty: string;
+      clearing: string;
+      cleared: string;
+      clear: string;
+    };
   };
 }
 
@@ -280,6 +288,14 @@ export const ui: Record<Lang, UIStrings> = {
         error: "Export failed. Please try again.",
         generating: "Generating",
       },
+      downloads: {
+        title: "AI models",
+        cached: "Downloaded and cached on this device",
+        empty: "Not downloaded yet (downloads on first use)",
+        clearing: "Removing…",
+        cleared: "Models removed",
+        clear: "Clear models",
+      },
     },
   },
 
@@ -442,6 +458,14 @@ export const ui: Record<Lang, UIStrings> = {
       export: {
         error: "El export falló. Inténtalo de nuevo.",
         generating: "Generando",
+      },
+      downloads: {
+        title: "Modelos de IA",
+        cached: "Descargados y en caché en este dispositivo",
+        empty: "Aún no descargados (se descargan al primer uso)",
+        clearing: "Eliminando…",
+        cleared: "Modelos eliminados",
+        clear: "Borrar modelos",
       },
     },
   },
