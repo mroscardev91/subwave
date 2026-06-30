@@ -82,7 +82,25 @@ export function initConfigStage(): void {
 
       const output = await transcribe(session.audio, session.sourceLang ?? undefined);
       const srcCode = session.sourceLang ?? "auto";
-      const tracks = [{ lang: srcCode, segments: segmentsFromAsr(output) }];
+
+      // Aspect ratio del vídeo → trozos más cortos en vertical (como subvid).
+      let aspectRatio = 16 / 9;
+      if (session.kind === "video" && session.objectUrl) {
+        const v = document.createElement("video");
+        v.src = session.objectUrl;
+        v.muted = true;
+        try {
+          await new Promise<void>((res, rej) => {
+            v.onloadedmetadata = () => res();
+            v.onerror = () => rej(new Error("meta"));
+            setTimeout(() => rej(new Error("timeout")), 4000);
+          });
+          if (v.videoWidth && v.videoHeight) aspectRatio = v.videoWidth / v.videoHeight;
+        } catch {
+          /* usa el valor por defecto */
+        }
+      }
+      const tracks = [{ lang: srcCode, segments: segmentsFromAsr(output, { aspectRatio }) }];
 
       // Si el idioma de salida difiere (y conocemos el de origen), traduce con NLLB.
       if (session.targetLang && session.targetLang !== srcCode && srcCode !== "auto") {

@@ -8,58 +8,102 @@ export interface Segment {
   text: string;
 }
 
-// Tamaño de un subtítulo: trozos cortos estilo subvid (~4 palabras / 2 líneas).
-const MAX_CUE_WORDS = 5;
-const MAX_CUE_CHARS = 30;
-// Pausa (silencio entre palabras) que fuerza un corte aunque el trozo sea corto.
-const CUE_GAP_SECONDS = 0.6;
+// Troceo estilo subvid. Una pausa larga corta el trozo aunque sea corto.
+const SILENCE_BREAK_SECONDS = 0.55;
+
+interface Word {
+  text: string;
+  start: number;
+  end: number;
+}
+
+// ¿Los chunks de Whisper son por palabra? (>82% son una sola palabra).
+function isWordLevelChunks(chunks: any[]): boolean {
+  const texts = chunks.map((c) => String(c?.text ?? "").trim()).filter(Boolean);
+  if (texts.length < 2) return false;
+  const single = texts.filter((t) => !/\s/.test(t)).length;
+  return single / texts.length > 0.82;
+}
+
+// Límites de línea según el aspect ratio: vídeos verticales (<1) acortan las
+// líneas proporcionalmente para que el texto quepa en el frame estrecho.
+function lineLimits(aspectRatio: number): { maxChars: number; maxWords: number } {
+  const ratio = Math.min(1, aspectRatio * 1.2);
+  return { maxChars: Math.max(24, Math.round(46 * ratio)), maxWords: Math.max(4, Math.round(8 * ratio)) };
+}
+
+function normWord(c: any, i: number): Word | null {
+  const text = String(c?.text ?? "").trim();
+  if (!text) return null;
+  const r = Array.isArray(c?.timestamp) ? c.timestamp : [i * 2, i * 2 + 2];
+  const start = Number.isFinite(r[0]) ? r[0] : i * 2;
+  const end = Number.isFinite(r[1]) ? r[1] : start + 2;
+  return { text, start, end: Math.max(start + 0.08, end) };
+}
+
+function wordsText(ws: Word[]): string {
+  return ws.map((w) => w.text).join(" ");
+}
+
+// Agrupa palabras en trozos cortos (estilo subvid): corta por nº de palabras,
+// longitud, pausa o fin de frase suave.
+function groupWords(chunks: any[], aspectRatio: number): Segment[] {
+  const { maxChars, maxWords } = lineLimits(aspectRatio);
+  const words = chunks
+    .map((c, i) => normWord(c, i))
+    .filter((w): w is Word => !!w)
+    .sort((a, b) => a.start - b.start);
+
+  const segments: Segment[] = [];
+  let line: Word[] = [];
+  const flush = () => {
+    if (!line.length) return;
+    const start = line[0].start;
+    const end = Math.max(start + 0.35, line[line.length - 1].end);
+    segments.push({ id: `seg-${segments.length}`, start, end, text: wordsText(line) });
+    line = [];
+  };
+
+  for (const w of words) {
+    if (line.length) {
+      const prev = line[line.length - 1];
+      const silence = w.start - prev.end;
+      const nextText = wordsText([...line, w]);
+      const nextDuration = w.end - line[0].start;
+      if (silence > SILENCE_BREAK_SECONDS || line.length >= maxWords || nextText.length > maxChars || nextDuration > 5.2) {
+        flush();
+      }
+    }
+    line.push(w);
+    const text = wordsText(line);
+    const duration = line[line.length - 1].end - line[0].start;
+    // Fin de frase suave: cierra antes si ya hay frase legible.
+    if (/[.!?…]$/.test(w.text) && line.length >= 3 && duration >= 1.1 && text.length >= 18) flush();
+  }
+  flush();
+  return segments;
+}
 
 // Convierte la salida de Whisper (transformers.js) en segmentos. Con
-// return_timestamps:"word" viene `chunks: [{ timestamp: [start, end], text }]`
-// por PALABRA; las agrupamos en trozos cortos (por nº de palabras, longitud o
-// una pausa), como hace subvid, en vez de un subtítulo por frase.
+// return_timestamps:"word" los chunks son por palabra y se agrupan en trozos
+// cortos como subvid; si no, se usan los chunks (frase) directamente.
 // `any` acotado a la frontera con la librería ML.
-export function segmentsFromAsr(output: any): Segment[] {
+export function segmentsFromAsr(output: any, options: { aspectRatio?: number } = {}): Segment[] {
+  const aspectRatio = options.aspectRatio || 16 / 9;
   const chunks = output?.chunks;
   if (Array.isArray(chunks) && chunks.length > 0) {
-    const segments: Segment[] = [];
-    let text = "";
-    let words = 0;
-    let start: number | null = null;
-    let end = 0;
-
-    const flush = () => {
-      const t = text.trim();
-      if (t) segments.push({ id: `seg-${segments.length}`, start: start ?? 0, end, text: t });
-      text = "";
-      words = 0;
-      start = null;
-    };
-
-    for (let i = 0; i < chunks.length; i++) {
-      const c = chunks[i];
-      const cStart = c?.timestamp?.[0] ?? end;
-      // Whisper puede dar end=null en la última palabra; usa el inicio de la
-      // siguiente para que el trozo tenga duración visible.
-      const next = chunks[i + 1]?.timestamp?.[0];
-      const cEnd = c?.timestamp?.[1] ?? (typeof next === "number" ? next : cStart);
-      const gapBefore = start !== null && typeof cStart === "number" ? cStart - end : 0;
-
-      // Una pausa larga cierra el trozo actual antes de añadir la palabra.
-      if (start !== null && gapBefore >= CUE_GAP_SECONDS) flush();
-
-      if (start === null) start = cStart;
-      text += c?.text ?? "";
-      words += 1;
-      end = cEnd;
-
-      if (words >= MAX_CUE_WORDS || text.trim().length >= MAX_CUE_CHARS) flush();
-    }
-    flush();
-    return segments;
+    if (isWordLevelChunks(chunks)) return groupWords(chunks, aspectRatio);
+    return chunks
+      .map((c: any, i: number) => {
+        const r = Array.isArray(c?.timestamp) ? c.timestamp : [i * 2, i * 2 + 2];
+        const start = Number.isFinite(r[0]) ? r[0] : i * 2;
+        const end = Number.isFinite(r[1]) ? r[1] : start + 2;
+        return { id: `seg-${i}`, start, end: Math.max(start + 0.35, end), text: String(c?.text ?? "").trim() };
+      })
+      .filter((s: Segment) => s.text.length > 0);
   }
   const text = String(output?.text ?? "").trim();
-  return text ? [{ id: "seg-0", start: 0, end: 0, text }] : [];
+  return text ? [{ id: "seg-0", start: 0, end: 6, text }] : [];
 }
 
 /** "m:ss" para etiquetas cortas (regla de la timeline). */
