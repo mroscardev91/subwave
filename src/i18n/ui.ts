@@ -132,7 +132,7 @@ export const ui: Record<Lang, UIStrings> = {
     meta: {
       title: "Subwave — Free AI subtitle generator in your browser",
       description:
-        "Free AI subtitle generator in your browser: transcribe, translate and burn subtitles into your video, then export .srt or MP4. No uploads — your file stays on your device.",
+        "Free AI subtitle generator in your browser: transcribe, translate and burn captions, then export .srt or MP4. No uploads — your file stays on-device.",
       keywords:
         "AI subtitles, subtitle generator, automatic subtitles, video captions, transcribe video, translate subtitles, burn subtitles, add subtitles to video, SRT generator, video to text, free, in browser, no upload, private, Whisper",
     },
@@ -303,7 +303,7 @@ export const ui: Record<Lang, UIStrings> = {
     meta: {
       title: "Subwave — Generador de subtítulos con IA en el navegador",
       description:
-        "Generador de subtítulos con IA en tu navegador: transcribe, traduce y quema subtítulos en tu vídeo, y exporta .srt o MP4. Sin subidas — tu archivo no sale de tu dispositivo.",
+        "Generador de subtítulos con IA en el navegador: transcribe, traduce y quema subtítulos, y exporta .srt o MP4. Sin subidas — tu archivo no sale del equipo.",
       keywords:
         "subtítulos con IA, generador de subtítulos, subtítulos automáticos, transcribir vídeo, traducir subtítulos, subtítulos quemados, poner subtítulos a un vídeo, generar SRT, vídeo a texto, gratis, en el navegador, sin subir archivos, privado, Whisper",
     },

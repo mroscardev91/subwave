@@ -7,7 +7,15 @@ const MODEL_CACHE_RE = /transformers|onnx|hugging|hf-/i;
 async function modelCacheKeys(): Promise<string[]> {
   if (!("caches" in window)) return [];
   try {
-    return (await caches.keys()).filter((k) => MODEL_CACHE_RE.test(k));
+    const names = (await caches.keys()).filter((k) => MODEL_CACHE_RE.test(k));
+    // Solo cachés con contenido real: transformers.js crea la clave antes de
+    // guardar nada, así que una descarga abortada deja una caché vacía.
+    const withEntries: string[] = [];
+    for (const name of names) {
+      const cache = await caches.open(name);
+      if ((await cache.keys()).length) withEntries.push(name);
+    }
+    return withEntries;
   } catch {
     return [];
   }
@@ -51,5 +59,13 @@ export function initDownloads(): void {
     clearBtn.disabled = false;
   });
 
-  void refresh();
+  // Re-lee el estado cada vez que el panel reaparece (p. ej. al volver del editor
+  // tras descargar/borrar modelos en la misma sesión SPA), no solo al cargar.
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) void refresh();
+    }).observe(panel);
+  } else {
+    void refresh();
+  }
 }

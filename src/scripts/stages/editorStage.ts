@@ -436,15 +436,18 @@ function wireStyleControls(): void {
   }
   // Alternativa de teclado al arrastre: con el botón "libre" enfocado, las flechas
   // ↑/↓ suben/bajan el subtítulo (posición libre, X centrada).
-  stage.querySelector<HTMLButtonElement>('[data-pos="custom"]')?.addEventListener("keydown", (e) => {
+  const customPosBtn = stage.querySelector<HTMLButtonElement>('[data-pos="custom"]');
+  customPosBtn?.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
     e.preventDefault();
     const step = (e.shiftKey ? 5 : 2) * (e.key === "ArrowDown" ? 1 : -1);
     session.style.position = "custom";
     session.style.customX = 50;
     session.style.customY = Math.min(95, Math.max(5, session.style.customY + step));
-    applyStyle();
-    segs.commitStyle();
+    applyStyle(); // sin commit aquí: el key-repeat inundaría el historial
+  });
+  customPosBtn?.addEventListener("keyup", (e) => {
+    if (e.key === "ArrowUp" || e.key === "ArrowDown") segs.commitStyle(); // un gesto = una entrada
   });
   initBubbleDrag();
 }
