@@ -23,6 +23,7 @@ let media: HTMLMediaElement | null = null;
 let previewEl: HTMLElement;
 let overlay: HTMLElement;
 let bubble: HTMLElement;
+let vguide: HTMLElement;
 let previewHint: HTMLElement;
 let listEl: HTMLElement;
 let emptyEl: HTMLElement;
@@ -60,6 +61,7 @@ export function initEditorStage(): void {
   audio = q('[data-editor="audio"]');
   previewEl = q('[data-editor="preview"]');
   overlay = q('[data-editor="overlay"]');
+  vguide = q('[data-editor="vguide"]');
   bubble = q('[data-editor="bubble"]');
   previewHint = q('[data-editor="preview-hint"]');
   listEl = q('[data-editor="segments"]');
@@ -105,6 +107,12 @@ export function initEditorStage(): void {
   });
   customizeBtn = q('[data-editor="customize-toggle"]');
   customizeBtn.addEventListener("click", () => setCustomPanel(customPanel.hidden));
+  // Botón Animación: por ahora solo marca/desmarca (el resaltado animado del
+  // subtítulo es el siguiente feature).
+  const animBtn = q<HTMLButtonElement>('[data-editor="animation-toggle"]');
+  animBtn.addEventListener("click", () => {
+    animBtn.setAttribute("aria-pressed", String(animBtn.getAttribute("aria-pressed") !== "true"));
+  });
 
   document.addEventListener("keydown", (event) => {
     if (stage.hidden) return;
@@ -125,8 +133,18 @@ export function initEditorStage(): void {
 
   for (const m of [video, audio]) {
     m.addEventListener("timeupdate", () => onTimeUpdate(m));
-    m.addEventListener("play", updatePlayIcon);
-    m.addEventListener("pause", updatePlayIcon);
+    m.addEventListener("play", () => {
+      updatePlayIcon();
+      if (m === media) startPlayheadLoop();
+    });
+    m.addEventListener("pause", () => {
+      updatePlayIcon();
+      if (m === media) stopPlayheadLoop();
+    });
+    m.addEventListener("ended", () => {
+      updatePlayIcon();
+      if (m === media) stopPlayheadLoop();
+    });
     m.addEventListener("loadedmetadata", () => onLoadedMeta(m));
   }
 
@@ -225,6 +243,33 @@ function togglePlay(): void {
   if (!media) return;
   if (media.paused) void media.play();
   else media.pause();
+}
+
+// El evento timeupdate solo dispara ~4 veces/seg (playhead a tirones). Durante la
+// reproducción actualizamos el playhead/subtítulo con requestAnimationFrame para
+// que vaya fluido a la velocidad del vídeo.
+let playRaf = 0;
+function playheadLoop(): void {
+  if (!media || media.paused || media.ended) {
+    playRaf = 0;
+    return;
+  }
+  timeline.setPlayhead(media.currentTime);
+  refreshActive(media.currentTime);
+  updateTime();
+  playRaf = requestAnimationFrame(playheadLoop);
+}
+function startPlayheadLoop(): void {
+  if (!playRaf) playRaf = requestAnimationFrame(playheadLoop);
+}
+function stopPlayheadLoop(): void {
+  if (playRaf) cancelAnimationFrame(playRaf);
+  playRaf = 0;
+  if (media) {
+    timeline.setPlayhead(media.currentTime);
+    refreshActive(media.currentTime);
+    updateTime();
+  }
 }
 
 function updatePlayIcon(): void {
@@ -349,8 +394,9 @@ function setActivePosition(): void {
   }
 }
 
-// Arrastrar el bocadillo lo coloca libremente (posición "custom"). customX/customY
-// son el centro en % de la caja del vídeo (overlay).
+// Arrastrar el bocadillo lo mueve SOLO en vertical (posición "custom"): customX
+// queda centrado (50) y solo cambia customY. Muestra la guía del eje Y mientras
+// se arrastra. customY es el centro en % de la caja del vídeo (overlay).
 function initBubbleDrag(): void {
   // El click (incl. el sintético tras arrastrar) no debe llegar al preview y
   // conmutar play/pausa; stopPropagation en pointerdown no basta para el click.
@@ -361,9 +407,9 @@ function initBubbleDrag(): void {
     e.stopPropagation(); // no disparar play/pause del preview
     const ov = overlay.getBoundingClientRect();
     const b = bubble.getBoundingClientRect();
-    const offX = e.clientX - (b.left + b.width / 2);
     const offY = e.clientY - (b.top + b.height / 2);
     let done = false;
+    vguide.hidden = false; // eje Y visible al arrastrar
     try {
       bubble.setPointerCapture(e.pointerId);
     } catch {
@@ -371,10 +417,9 @@ function initBubbleDrag(): void {
     }
     const onMove = (ev: PointerEvent) => {
       bubble.style.cursor = "grabbing";
-      const cx = ev.clientX - offX;
       const cy = ev.clientY - offY;
       session.style.position = "custom";
-      session.style.customX = Math.min(100, Math.max(0, ((cx - ov.left) / ov.width) * 100));
+      session.style.customX = 50; // solo vertical: X siempre centrado
       session.style.customY = Math.min(100, Math.max(0, ((cy - ov.top) / ov.height) * 100));
       positionBubble(bubble, session.style);
       setActivePosition();
@@ -382,6 +427,7 @@ function initBubbleDrag(): void {
     const finish = () => {
       if (done) return;
       done = true;
+      vguide.hidden = true;
       bubble.style.cursor = "grab";
       bubble.removeEventListener("pointermove", onMove);
       bubble.removeEventListener("pointerup", finish);

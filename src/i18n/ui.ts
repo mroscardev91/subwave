@@ -43,6 +43,7 @@ export interface UIStrings {
       addLanguage: string;
       addLine: string;
       customize: string;
+      animation: string;
       presets: {
         base: string;
         clean: string;
@@ -207,6 +208,7 @@ export const ui: Record<Lang, UIStrings> = {
         addLanguage: "Add language",
         addLine: "Add line",
         customize: "Customize",
+        animation: "Animation",
         presets: {
           base: "Base",
           clean: "Clean",
@@ -369,6 +371,7 @@ export const ui: Record<Lang, UIStrings> = {
         addLanguage: "Añadir idioma",
         addLine: "Añadir línea",
         customize: "Personalizar",
+        animation: "Animación",
         presets: {
           base: "Base",
           clean: "Limpio",

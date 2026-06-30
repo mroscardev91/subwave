@@ -24,22 +24,30 @@ const select =
   "rounded-lg border border-on-deep-soft/25 bg-deep px-3 py-1.5 font-sans text-sm normal-case text-on-deep focus-visible:outline-none focus-visible:border-aqua focus-visible:ring-2 focus-visible:ring-aqua";
 ---
 
-<div class="flex flex-wrap items-center gap-2">
-  {presets.map((p) => (
-    <button type="button" data-preset={p.id} aria-pressed="false" class="preset-chip">
-      <span class="font-display text-lg leading-none" aria-hidden="true">Aa</span>
-      <span class="text-[11px] leading-none">{p.label}</span>
-    </button>
-  ))}
+<div class="flex flex-wrap items-center justify-between gap-2">
+  <div class="flex flex-wrap items-center gap-2">
+    {presets.map((p) => (
+      <button type="button" data-preset={p.id} aria-pressed="false" class="preset-chip">
+        <span class="font-display text-lg leading-none" aria-hidden="true">Aa</span>
+        <span class="text-[11px] leading-none">{p.label}</span>
+      </button>
+    ))}
+  </div>
 
-  <button type="button" data-editor="customize-toggle" aria-expanded="false" aria-controls="subtitle-style-panel" class="ml-1 inline-flex items-center gap-1.5 rounded-pill border border-on-deep-soft/30 px-3 py-2 text-sm text-on-deep transition hover:border-on-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-aqua">
-    <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true"><path d="M6 2h4l.4 2 1.7 1 2-.7 2 3.4-1.6 1.3v2l1.6 1.3-2 3.4-2-.7-1.7 1L10 18H6l-.4-2-1.7-1-2 .7-2-3.4L1.5 11V9L-.1 7.7l2-3.4 2 .7 1.7-1z" fill="none" stroke="currentColor" stroke-width="1.1" transform="scale(0.8) translate(2 1)" /></svg>
-    {e.customize}
-  </button>
+  <div class="flex items-center gap-2">
+    <button type="button" data-editor="animation-toggle" aria-pressed="false" class="ctl-pill">
+      <span class="ctl-w" aria-hidden="true">W</span>
+      {e.animation}
+    </button>
+    <button type="button" data-editor="customize-toggle" aria-expanded="false" aria-controls="subtitle-style-panel" class="ctl-pill">
+      <svg viewBox="0 0 16 16" class="h-3.5 w-3.5" aria-hidden="true"><path d="M2 4h7M11 4h3M2 8h3M7 8h7M2 12h9M13 12h1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="10" cy="4" r="1.6" fill="currentColor"/><circle cx="6" cy="8" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/></svg>
+      {e.customize}
+    </button>
+  </div>
 </div>
 
-<!-- Controles finos (popover, abre hacia arriba; no empuja el layout) -->
-<div data-editor="custom" id="subtitle-style-panel" hidden class="absolute bottom-[calc(100%-0.25rem)] left-6 right-6 z-30 rounded-card border border-on-deep-soft/15 bg-deep-soft p-4 shadow-soft">
+<!-- Controles finos (panel inline; al abrir empuja la preview, no la tapa) -->
+<div data-editor="custom" id="subtitle-style-panel" hidden class="mt-3 rounded-card border border-on-deep-soft/15 bg-deep-soft p-4">
   <div class="flex flex-wrap items-end gap-x-5 gap-y-4">
     <label class={field}>
       {sb.font}
@@ -134,4 +142,34 @@ const select =
   .pos-seg button:hover { color: var(--color-on-deep); background: color-mix(in oklab, var(--color-on-deep-soft) 12%, transparent); }
   .pos-seg button:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
   .pos-seg button[aria-pressed="true"] { background: var(--color-aqua); color: var(--color-deep); }
+
+  /* Pills de Animación / Personalizar (estilo subvid). Borde aqua al activar. */
+  .ctl-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--color-on-deep-soft) 30%, transparent);
+    color: var(--color-on-deep);
+    font-size: 0.875rem;
+    transition: border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .ctl-pill:hover { border-color: var(--color-on-deep); }
+  .ctl-pill:focus-visible { outline: 2px solid var(--color-aqua); outline-offset: 1px; }
+  .ctl-pill[aria-expanded="true"],
+  .ctl-pill[aria-pressed="true"] {
+    border-color: var(--color-aqua);
+    color: var(--color-aqua);
+    background: color-mix(in oklab, var(--color-aqua) 10%, transparent);
+  }
+  .ctl-w {
+    display: grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    border-radius: 999px;
+    border: 1.5px solid currentColor;
+    font: 700 0.7rem/1 var(--font-sans);
+  }
 </style>
