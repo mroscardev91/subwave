@@ -1,7 +1,8 @@
 // Extracción de audio con FFmpeg WASM. Whisper necesita Float32 mono a 16 kHz,
 // así que sacamos y reamuestreamos el audio del archivo subido. El core de
 // @ffmpeg/ffmpeg corre en su propio worker interno: el hilo principal solo
-// orquesta. El core se carga lazy (la 1ª vez que se sube algo) desde CDN.
+// orquesta. El core se carga lazy (la 1ª vez que se sube algo) desde el MISMO
+// origen (no de un CDN), para que ninguna petición salga a terceros.
 
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
@@ -12,9 +13,10 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 // no se resuelve solo desde dentro de la dependencia.
 import ffmpegWorkerURL from "@ffmpeg/ffmpeg/worker?worker&url";
 
-// Core ESM (lo exige el import() dinámico del worker módulo).
-// Para producción conviene self-hostear core+wasm en /public.
-const CORE_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
+// Core ESM (lo exige el import() dinámico del worker módulo). Self-hosteado en
+// public/ffmpeg/ (lo copia el script prebuild/predev desde @ffmpeg/core), así
+// que se sirve desde el mismo origen.
+const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg`;
 const LOAD_TIMEOUT_MS = 90_000;
 
 let ffmpeg: FFmpeg | null = null;

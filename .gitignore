@@ -29,3 +29,6 @@ pnpm-debug.log*
 !.claude/skills/astro-static-i18n/
 !.claude/skills/tailwind-v4-theming/
 !.claude/skills/webcodecs-video-export/
+
+# FFmpeg core copiado en build (no commitear ~32MB)
+public/ffmpeg/
