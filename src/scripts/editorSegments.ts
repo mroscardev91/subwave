@@ -3,7 +3,7 @@
 // que la UI (lista, timeline, overlay) se repinte.
 
 import { session } from "@/scripts/session";
-import type { Segment } from "@/scripts/subtitles";
+import { segmentAt as findSegmentAt, type Segment } from "@/scripts/subtitles";
 import * as history from "@/scripts/editorHistory";
 
 let selectedId: string | null = null;
@@ -86,19 +86,7 @@ export function applySnapshot(segs: Segment[]): void {
 }
 
 export function segmentAt(time: number): Segment | null {
-  const list = session.segments;
-  // Caso normal: el intervalo [start, end) contiene el tiempo.
-  const within = list.find((s) => time >= s.start && time < s.end);
-  if (within) return within;
-  // Segmento degenerado (end <= start, p. ej. último chunk de Whisper sin fin):
-  // activo desde su start hasta que empieza el siguiente (o el final).
-  for (let i = 0; i < list.length; i++) {
-    const s = list[i];
-    if (s.end > s.start) continue;
-    const next = list[i + 1];
-    if (time >= s.start && (!next || time < next.start)) return s;
-  }
-  return null;
+  return findSegmentAt(session.segments, time);
 }
 
 export function onChange(fn: () => void): void {

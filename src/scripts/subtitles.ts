@@ -46,6 +46,50 @@ export function formatTimecodeFull(seconds: number): string {
   return `${m}:${rest.toFixed(2).padStart(5, "0")}`;
 }
 
+function srtTime(seconds: number): string {
+  const ms = Math.max(0, Math.round(seconds * 1000));
+  const h = Math.floor(ms / 3_600_000);
+  const m = Math.floor((ms % 3_600_000) / 60_000);
+  const s = Math.floor((ms % 60_000) / 1000);
+  const millis = ms % 1000;
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)},${pad(millis, 3)}`;
+}
+
+/**
+ * Segmento activo en `time`. Fuente única para preview y export quemado.
+ * Caso normal: el intervalo [start, end) contiene el tiempo. Para segmentos
+ * degenerados (end <= start, p. ej. el último chunk de Whisper sin fin) usa el
+ * inicio del siguiente como fin implícito, igual que la preview.
+ */
+export function segmentAt(segments: Segment[], time: number): Segment | null {
+  const within = segments.find((s) => time >= s.start && time < s.end);
+  if (within) return within;
+  for (let i = 0; i < segments.length; i++) {
+    const s = segments[i];
+    if (s.end > s.start) continue;
+    const next = segments[i + 1];
+    if (time >= s.start && (!next || time < next.start)) return s;
+  }
+  return null;
+}
+
+/** Fin efectivo de un segmento (resuelve degenerados como la preview). */
+function effectiveEnd(segments: Segment[], i: number): number {
+  const s = segments[i];
+  if (s.end > s.start) return s.end;
+  const next = segments[i + 1];
+  return next && next.start > s.start ? next.start : s.start + 2;
+}
+
+/** Serializa segmentos a SubRip (.srt). */
+export function toSrt(segments: Segment[]): string {
+  const visible = segments.filter((s) => s.text.trim().length > 0);
+  return visible
+    .map((s, i) => `${i + 1}\n${srtTime(s.start)} --> ${srtTime(effectiveEnd(visible, i))}\n${s.text.trim()}\n`)
+    .join("\n");
+}
+
 /** Parsea "m:ss.ss" | "ss.ss" | "ss" a segundos. */
 export function parseTimecode(value: string): number | null {
   const str = value.trim();
