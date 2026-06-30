@@ -20,7 +20,7 @@ import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 
 export default defineConfig({
-  site: "https://subwave.app",          // cámbialo a tu URL final (subdominio o dominio)
+  site: "https://subwave.pro",          // cámbialo a tu URL final (subdominio o dominio)
   output: "static",                       // sin adapter, sin servidor
   i18n: {
     locales: ["en", "es"],

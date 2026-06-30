@@ -9,5 +9,5 @@
 
   <path d="M80 510 C113 470 146 470 170 510 C194 550 227 550 260 510 C293 470 326 470 350 510 C374 550 407 550 440 510 C463 470 496 470 520 510 C544 550 577 550 610 510 C633 470 666 470 690 510 C714 550 747 550 780 510 C803 472 840 482 880 504 C910 520 950 510 1010 510 L1130 510" fill="none" stroke="#2DE0CE" stroke-width="8" stroke-linecap="round"/>
 
-  <text x="80" y="588" font-family="JetBrains Mono, ui-monospace, monospace" font-size="30" font-weight="500" fill="#8A93A0">subwave.app</text>
+  <text x="80" y="588" font-family="JetBrains Mono, ui-monospace, monospace" font-size="30" font-weight="500" fill="#8A93A0">subwave.pro</text>
 </svg>

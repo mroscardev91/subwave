@@ -18,7 +18,7 @@ Es una app de subtítulos con **identidad visual propia**
 
 ```
 APP_NAME   = "Subwave"
-DOMAIN     = "subwave.app"   # ajusta a tu URL real (p. ej. subwave-app.vercel.app)
+DOMAIN     = "subwave.pro"   # ajusta a tu URL real (p. ej. subwave-app.vercel.app)
 TAGLINE_ES = "Del audio al texto. Subtítulos con IA en tu navegador, sin que tu vídeo salga de tu equipo."
 TAGLINE_EN = "From sound to subtitles. AI captions in your browser — your video never leaves your device."
 VIBE       = "Landing de papel editorial (Instrument Serif + Outfit, textura sutil) y editor oscuro 'agua profunda' con un único acento aqua eléctrico (#2DE0CE). El logo es una onda con su sub-onda debajo; motivo de onda/waveform por toda la UI."

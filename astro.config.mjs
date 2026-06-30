@@ -10,7 +10,7 @@ import sitemap from "@astrojs/sitemap";
 // Vercel, Cloudflare Pages, Netlify o GitHub Pages indistintamente.
 export default defineConfig({
   // Cambia esto a tu URL final (subdominio gratis o dominio propio).
-  site: "https://subwave.app",
+  site: "https://subwave.pro",
   output: "static",
   i18n: {
     locales: ["en", "es"],
