@@ -137,7 +137,7 @@ export function initConfigStage(): void {
       if (getCurrent() !== "config") return;
       enterEditor();
       goTo("editor");
-    } catch {
+    } catch (err) {
       // Libera los modelos pesados aunque falle (p. ej. OOM en la inferencia):
       // no deben quedar residentes al volver al formulario / cambiar de etapa.
       releaseAsr();
@@ -145,7 +145,10 @@ export function initConfigStage(): void {
       progress.hidden = true;
       form.hidden = false;
       setBusy(false);
-      errorText.textContent = t.errorGeneric;
+      console.error("[config] transcription failed:", err);
+      // Muestra el detalle en pantalla (diagnóstico en móvil, sin consola).
+      const detail = err instanceof Error ? err.message : String(err);
+      errorText.textContent = detail ? `${t.errorGeneric} [${detail}]` : t.errorGeneric;
       errorBox.hidden = false;
       errorBox.focus();
     }
