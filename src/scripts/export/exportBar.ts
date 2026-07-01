@@ -74,7 +74,9 @@ async function runVideo(): Promise<void> {
       },
     );
     download(blob, `${baseName()}-${activeLang()}.${ext}`);
-    statusEl.textContent = "";
+    // Si se pidió MP4 pero salió WebM (este navegador no pudo generar MP4), avísalo
+    // en vez de entregar un contenedor distinto en silencio.
+    statusEl.textContent = formatSel.value === "mp4" && ext !== "mp4" ? t.fellback : "";
   } catch {
     statusEl.textContent = t.error;
   } finally {

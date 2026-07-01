@@ -72,22 +72,30 @@ export async function exportMp4(
     await output.start();
 
     // Vídeo: cada frame decodificado → dibuja frame + subtítulo → encodea.
+    // Los timestamps deben ser >= 0 (el muxer los rechaza si no); clamp defensivo.
     const sink = new CanvasSink(videoTrack, { poolSize: 2 });
     for await (const frame of sink.canvases()) {
       ctx.drawImage(frame.canvas, 0, 0, width, height);
       const seg = segmentAt(segments, frame.timestamp);
       drawSubtitle(ctx, seg?.text ?? "", style, width, height, seg ? { words: wordsForSegment(seg), time: frame.timestamp } : null);
-      await videoSource.add(frame.timestamp, frame.duration);
+      await videoSource.add(Math.max(0, frame.timestamp), frame.duration);
       onProgress(Math.min(0.99, frame.timestamp / duration));
     }
 
-    // Audio: copia los paquetes encodeados en orden de decodificación.
+    // Audio: copia los paquetes encodeados. Los MP4/AAC reales (iPhone/QuickTime/
+    // ffmpeg) llevan un edit list que recorta el priming del AAC, así que el primer
+    // paquete tiene timestamp NEGATIVO y el muxer lo rechaza ("Timestamps must be
+    // non-negative"). Desplazamos toda la pista para que arranque en 0 (preserva el
+    // espaciado; el desfase es ~1 frame de priming, inaudible).
     if (audioSource && audioTrack) {
       const audioSink = new EncodedPacketSink(audioTrack);
       const decoderConfig = await audioTrack.getDecoderConfig();
       let first = true;
+      let shift = 0;
       for await (const packet of audioSink.packets()) {
-        await audioSource.add(packet, first ? { decoderConfig: decoderConfig! } : undefined);
+        if (first) shift = Math.min(0, packet.timestamp);
+        const p = shift < 0 ? packet.clone({ timestamp: packet.timestamp - shift }) : packet;
+        await audioSource.add(p, first ? { decoderConfig: decoderConfig! } : undefined);
         first = false;
       }
     }

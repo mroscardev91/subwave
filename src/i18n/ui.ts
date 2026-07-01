@@ -120,6 +120,7 @@ export interface UIStrings {
     export: {
       error: string;
       generating: string;
+      fellback: string;
     };
     downloads: {
       title: string;
@@ -305,6 +306,7 @@ export const ui: Record<Lang, UIStrings> = {
       export: {
         error: "Export failed. Please try again.",
         generating: "Generating",
+        fellback: "MP4 isn't available in this browser — exported as WebM.",
       },
       downloads: {
         title: "AI models",
@@ -489,6 +491,7 @@ export const ui: Record<Lang, UIStrings> = {
       export: {
         error: "El export falló. Inténtalo de nuevo.",
         generating: "Generando",
+        fellback: "MP4 no disponible en este navegador — exportado como WebM.",
       },
       downloads: {
         title: "Modelos de IA",
