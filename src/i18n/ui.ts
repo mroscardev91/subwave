@@ -28,7 +28,7 @@ export interface UIStrings {
     restart: string;
     privateChip: string;
     upload: { title: string; lead: string; cta: string; browse: string; formats: string; privacy: string; chooseAnother: string; next: string };
-    config: { title: string; lead: string; source: string; target: string; autodetect: string; sameAsAudio: string; note: string; transcribe: string };
+    config: { title: string; lead: string; source: string; target: string; autodetect: string; sameAsAudio: string; note: string; transcribe: string; deviceWarn: string };
     editor: {
       title: string;
       lead: string;
@@ -215,6 +215,7 @@ export const ui: Record<Lang, UIStrings> = {
         sameAsAudio: "Same as audio",
         note: "To translate, pick the spoken language (auto-detect can't translate) and a different subtitle language.",
         transcribe: "Transcribe",
+        deviceWarn: "AI transcription runs in your browser and needs a fair amount of memory. On phones it may fail on longer clips — a computer is recommended.",
       },
       editor: {
         title: "Edit your subtitles",
@@ -400,6 +401,7 @@ export const ui: Record<Lang, UIStrings> = {
         sameAsAudio: "Igual que el audio",
         note: "Para traducir, indica el idioma hablado (autodetectar no puede traducir) y un idioma de subtítulos distinto.",
         transcribe: "Transcribir",
+        deviceWarn: "La transcripción con IA corre en tu navegador y necesita bastante memoria. En móviles puede fallar con vídeos largos — se recomienda un ordenador.",
       },
       editor: {
         title: "Edita tus subtítulos",

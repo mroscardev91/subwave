@@ -8,7 +8,7 @@ import { session, setTracks } from "@/scripts/session";
 import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
-import { pickAsrModel, pickAsrDtype } from "@/scripts/models";
+import { pickAsrModel, pickAsrDtype, isConstrainedDevice } from "@/scripts/models";
 import { markWhisperReady } from "@/scripts/modelLoader";
 
 export function initConfigStage(): void {
@@ -30,6 +30,9 @@ export function initConfigStage(): void {
   const bar = q<HTMLElement>('[data-config="bar"]');
   const errorBox = q('[data-config="error"]');
   const errorText = q('[data-config="error-text"]');
+
+  // Aviso en dispositivos de poca RAM: la transcripción con IA puede no caber.
+  if (isConstrainedDevice()) q('[data-config="device-warn"]').hidden = false;
 
   const setBar = (ratio: number | null) => {
     if (ratio === null) {
@@ -146,9 +149,7 @@ export function initConfigStage(): void {
       form.hidden = false;
       setBusy(false);
       console.error("[config] transcription failed:", err);
-      // Muestra el detalle en pantalla (diagnóstico en móvil, sin consola).
-      const detail = err instanceof Error ? err.message : String(err);
-      errorText.textContent = detail ? `${t.errorGeneric} [${detail}]` : t.errorGeneric;
+      errorText.textContent = t.errorGeneric;
       errorBox.hidden = false;
       errorBox.focus();
     }

@@ -38,6 +38,12 @@ const selectClass =
     </div>
 
     <p class="mt-5 rounded-card border border-on-deep-soft/20 bg-deep-soft px-4 py-3 text-sm text-on-deep-soft">{c.note}</p>
+
+    <!-- Aviso en dispositivos de poca RAM: la transcripción con IA puede no caber. -->
+    <p data-config="device-warn" hidden class="mt-3 flex items-start gap-2 rounded-card border border-alert/35 bg-alert/10 px-4 py-3 text-sm text-on-deep">
+      <svg viewBox="0 0 16 16" class="mt-px h-4 w-4 shrink-0 text-alert" aria-hidden="true"><path d="M8 1.5 15 14H1z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" /><path d="M8 6.5v3.2M8 11.6v.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>
+      {c.deviceWarn}
+    </p>
   </div>
 
   <!-- Progreso de descarga del modelo + transcripción -->
