@@ -21,11 +21,11 @@ let loadingModel = "";
 
 const post = (msg: any, transfer: Transferable[] = []) => (self as Window & typeof globalThis).postMessage(msg, transfer);
 
-async function ensure(model: string, webgpu: boolean): Promise<void> {
+async function ensure(model: string, webgpu: boolean, dtype: string): Promise<void> {
   if (recognizer && loadedModel === model) return;
   if (loadingPromise && loadingModel === model) return loadingPromise;
   loadingModel = model;
-  loadingPromise = load(model, webgpu);
+  loadingPromise = load(model, webgpu, dtype);
   try {
     await loadingPromise;
   } finally {
@@ -33,7 +33,7 @@ async function ensure(model: string, webgpu: boolean): Promise<void> {
   }
 }
 
-async function load(model: string, webgpu: boolean): Promise<void> {
+async function load(model: string, webgpu: boolean, dtype: string): Promise<void> {
   const common = {
     progress_callback: (p: any) => post({ type: "progress", key: "asr", payload: p }),
   };
@@ -49,7 +49,8 @@ async function load(model: string, webgpu: boolean): Promise<void> {
     }
   }
 
-  recognizer = await pipeline("automatic-speech-recognition", model, { ...common, dtype: "fp32" });
+  // dtype según el dispositivo (q8 en móvil ≈ 4× menos RAM que fp32; fp32 en escritorio).
+  recognizer = await pipeline("automatic-speech-recognition", model, { ...common, dtype: dtype || "fp32" });
   loadedModel = model;
 }
 
@@ -57,7 +58,7 @@ self.onmessage = async (event: MessageEvent) => {
   const { id, type, payload } = event.data || {};
   try {
     if (type === "ensure-asr") {
-      await ensure(payload.model, !!payload.webgpu);
+      await ensure(payload.model, !!payload.webgpu, payload.dtype);
       post({ id, type: "done" });
     } else if (type === "transcribe") {
       const output = await recognizer(payload.audio, {

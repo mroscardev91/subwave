@@ -3,7 +3,7 @@
 // (no en la landing), reporta progreso en vivo y avisa a los suscriptores.
 
 import { ensureAsr } from "@/scripts/transformersClient";
-import { pickAsrModel, isConstrainedDevice } from "@/scripts/models";
+import { pickAsrModel, pickAsrDtype, isConstrainedDevice } from "@/scripts/models";
 import { preloadCore } from "@/scripts/media/audio";
 
 export type ModelKey = "ffmpeg" | "whisper" | "translation";
@@ -108,6 +108,7 @@ async function warmWhisper(): Promise<void> {
   const files = new Map<string, { loaded: number; total: number }>();
   try {
     await ensureAsr(pickAsrModel(), {
+      dtype: pickAsrDtype(),
       webgpu: false,
       onProgress: (p: { status?: string; file?: string; loaded?: number; total?: number }) => {
         if (p?.status === "progress" && p.file) {

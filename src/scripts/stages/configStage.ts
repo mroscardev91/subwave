@@ -8,7 +8,7 @@ import { session, setTracks } from "@/scripts/session";
 import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
-import { pickAsrModel } from "@/scripts/models";
+import { pickAsrModel, pickAsrDtype } from "@/scripts/models";
 import { markWhisperReady } from "@/scripts/modelLoader";
 
 export function initConfigStage(): void {
@@ -66,8 +66,10 @@ export function initConfigStage(): void {
     statusEl.focus(); // el botón pulsado se deshabilita; no pierdas el foco
 
     try {
-      // Modelo según el dispositivo: whisper-tiny en móvil (menos RAM), base en escritorio.
+      // Modelo + dtype según el dispositivo: whisper-tiny q8 en móvil (menos RAM,
+      // evita OOM), base fp32 en escritorio (más preciso).
       await ensureAsr(pickAsrModel(), {
+        dtype: pickAsrDtype(),
         // WASM a propósito: Whisper en WebGPU (transformers.js) es inestable según
         // GPU/driver y puede generar salida vacía sin lanzar, lo que rompería la
         // transcripción de forma silenciosa. El worker conserva la rama WebGPU

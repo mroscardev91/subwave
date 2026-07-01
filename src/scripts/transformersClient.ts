@@ -75,12 +75,13 @@ function send(worker: Worker, type: string, payload: any, transfer: Transferable
 
 export interface EnsureOptions {
   webgpu?: boolean;
+  dtype?: string;
   onProgress?: (payload: any) => void;
 }
 
 export function ensureAsr(model: string, opts: EnsureOptions = {}): Promise<void> {
   onProgress.asr = opts.onProgress;
-  return send(getAsrWorker(), "ensure-asr", { model, webgpu: opts.webgpu });
+  return send(getAsrWorker(), "ensure-asr", { model, webgpu: opts.webgpu, dtype: opts.dtype });
 }
 
 export function transcribe(audio: Float32Array, language?: string): Promise<any> {
