@@ -25,11 +25,12 @@ export function pickAsrModel(): string {
 }
 
 /**
- * dtype de Whisper por dispositivo: q8 en móvil (~4× menos RAM que fp32, evita el
- * OOM en la inferencia; usa MatMulInteger/DynamicQuantize, sí soportados por el
- * ORT-web incluido — a diferencia de q4/q4f16 de OPUS-MT que usan MatMulNBits).
- * fp32 en escritorio (más preciso y hay RAM de sobra).
+ * dtype de Whisper. Siempre fp32: el `_quantized` (q8) de estos modelos usa
+ * MatMulNBits y el onnxruntime-web incluido (1.26.0-dev) NO lo carga
+ * ("Missing required scale ... MatMulNBits"), igual que con OPUS-MT. No hay
+ * versión de transformers.js con un ORT estable que lo arregle. Se deja fp32
+ * (lo que sí funciona) y se acota la RAM con el modelo tiny en móvil.
  */
-export function pickAsrDtype(): "q8" | "fp32" {
-  return isConstrainedDevice() ? "q8" : "fp32";
+export function pickAsrDtype(): "fp32" {
+  return "fp32";
 }
