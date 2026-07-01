@@ -2,15 +2,14 @@
 // transcripción (descarga del modelo con progreso → Whisper → segmentos →
 // editor). La traducción OPUS-MT (cuando los idiomas difieren) llega en el Hito 6.
 
-import { ensureAsr, transcribe } from "@/scripts/transformersClient";
+import { ensureAsr, transcribe, releaseAsr, releaseTranslation } from "@/scripts/transformersClient";
 import { segmentsFromAsr } from "@/scripts/subtitles";
 import { session, setTracks } from "@/scripts/session";
 import { translateSegments } from "@/scripts/translate";
 import { goTo, getCurrent } from "@/scripts/stageManager";
 import { enterEditor } from "@/scripts/stages/editorStage";
-import { ASR_MODEL } from "@/scripts/models";
-
-const MODEL = ASR_MODEL;
+import { pickAsrModel } from "@/scripts/models";
+import { markWhisperReady } from "@/scripts/modelLoader";
 
 export function initConfigStage(): void {
   const stage = document.querySelector<HTMLElement>('[data-stage="config"]');
@@ -67,7 +66,8 @@ export function initConfigStage(): void {
     statusEl.focus(); // el botón pulsado se deshabilita; no pierdas el foco
 
     try {
-      await ensureAsr(MODEL, {
+      // Modelo según el dispositivo: whisper-tiny en móvil (menos RAM), base en escritorio.
+      await ensureAsr(pickAsrModel(), {
         // WASM a propósito: Whisper en WebGPU (transformers.js) es inestable según
         // GPU/driver y puede generar salida vacía sin lanzar, lo que rompería la
         // transcripción de forma silenciosa. El worker conserva la rama WebGPU
@@ -86,6 +86,8 @@ export function initConfigStage(): void {
       setBar(null);
 
       const output = await transcribe(session.audio, session.sourceLang ?? undefined);
+      markWhisperReady(); // refleja en el panel (en móvil no hubo warm)
+      releaseAsr(); // libera el modelo (~150-290 MB): el editor no lo usa
       const srcCode = session.sourceLang ?? "auto";
 
       // Aspect ratio del vídeo → trozos más cortos en vertical.
@@ -120,6 +122,7 @@ export function initConfigStage(): void {
         });
         tracks.push({ lang: session.targetLang, segments: translated });
       }
+      releaseTranslation(); // libera OPUS-MT (~300 MB) antes de editar/reproducir
       setTracks(tracks);
 
       // Restaura el formulario por si se vuelve a esta etapa.
@@ -133,6 +136,10 @@ export function initConfigStage(): void {
       enterEditor();
       goTo("editor");
     } catch {
+      // Libera los modelos pesados aunque falle (p. ej. OOM en la inferencia):
+      // no deben quedar residentes al volver al formulario / cambiar de etapa.
+      releaseAsr();
+      releaseTranslation();
       progress.hidden = true;
       form.hidden = false;
       setBusy(false);

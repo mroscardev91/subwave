@@ -3,7 +3,7 @@
 // (no en la landing), reporta progreso en vivo y avisa a los suscriptores.
 
 import { ensureAsr } from "@/scripts/transformersClient";
-import { ASR_MODEL } from "@/scripts/models";
+import { pickAsrModel, isConstrainedDevice } from "@/scripts/models";
 import { preloadCore } from "@/scripts/media/audio";
 
 export type ModelKey = "ffmpeg" | "whisper" | "translation";
@@ -55,6 +55,11 @@ export function markFfmpegReady(): void {
   if (state.ffmpeg.status !== "ready") set("ffmpeg", { status: "ready" });
 }
 
+/** Whisper quedó listo por uso real (transcripción), aunque no se hiciera warm (móvil). */
+export function markWhisperReady(): void {
+  if (state.whisper.status !== "ready") set("whisper", { status: "ready" });
+}
+
 // Suma loaded/total de los archivos que transformers.js va descargando.
 function aggregate(files: Map<string, { loaded: number; total: number }>): { loaded: number; total: number } {
   let loaded = 0;
@@ -74,9 +79,12 @@ export function warmModels(): void {
   const conn = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection;
   if (conn?.saveData) return;
   started = true;
+  // En móvil / poca RAM NO se pre-instancia Whisper (~150-290 MB): dejaría sin
+  // margen a FFmpeg + decodificación de vídeo. Se carga al pulsar Transcribir.
+  const constrained = isConstrainedDevice();
   const run = () => {
     void warmFfmpeg();
-    void warmWhisper();
+    if (!constrained) void warmWhisper();
   };
   const idle = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => void }).requestIdleCallback;
   if (idle) idle(run, { timeout: 4000 });
@@ -99,7 +107,7 @@ async function warmWhisper(): Promise<void> {
   set("whisper", { status: "loading" });
   const files = new Map<string, { loaded: number; total: number }>();
   try {
-    await ensureAsr(ASR_MODEL, {
+    await ensureAsr(pickAsrModel(), {
       webgpu: false,
       onProgress: (p: { status?: string; file?: string; loaded?: number; total?: number }) => {
         if (p?.status === "progress" && p.file) {

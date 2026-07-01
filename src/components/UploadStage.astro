@@ -9,8 +9,9 @@ interface Props {
 const { lang } = Astro.props;
 const u = ui[lang].app.upload;
 
-const accept =
-  "video/mp4,video/quicktime,video/webm,video/x-matroska,audio/mpeg,audio/wav,audio/ogg,.mp4,.mov,.webm,.mkv,.mp3,.wav,.ogg";
+// Amplio para que la galería del móvil muestre todo lo reproducible (iOS .mov/.m4v,
+// Android .3gp, etc.); FFmpeg demuxea por contenido, no por extensión.
+const accept = "video/*,audio/*";
 ---
 
 <section data-stage="upload" hidden aria-labelledby="upload-h" class="mx-auto max-w-3xl px-6 py-12 sm:py-16">

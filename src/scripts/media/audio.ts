@@ -4,7 +4,7 @@
 // orquesta. El core se carga lazy (la 1ª vez que se sube algo) desde el MISMO
 // origen (no de un CDN), para que ninguna petición salga a terceros.
 
-import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { FFmpeg, FFFSType } from "@ffmpeg/ffmpeg";
 import { fetchFile, toBlobURL } from "@ffmpeg/util";
 // Worker ESM de @ffmpeg/ffmpeg, empaquetado por Vite (?worker&url). FFmpeg crea
 // SIEMPRE el worker como módulo ES; en ese contexto el worker carga el core con
@@ -39,17 +39,27 @@ export interface ExtractedAudio {
 /** No audio stream in the source — surfaced to the UI as a clear message. */
 export class NoAudioError extends Error {}
 
+// Blob URLs del core, memoizados: toBlobURL crea object URLs que nunca se revocan,
+// así que al terminar/recargar FFmpeg entre extracciones se reutilizan en vez de
+// crear ~32 MB de blobs nuevos (fuga) en cada re-subida.
+let coreBlobs: { coreURL: string; wasmURL: string } | null = null;
+async function getCoreBlobs(): Promise<{ coreURL: string; wasmURL: string }> {
+  if (!coreBlobs) {
+    coreBlobs = {
+      coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
+    };
+  }
+  return coreBlobs;
+}
+
 async function getFFmpeg(cb?: ExtractCallbacks): Promise<FFmpeg> {
   if (ffmpeg) return ffmpeg;
   if (!loadPromise) {
     loadPromise = (async () => {
       cb?.onPhase?.("loading");
       const ff = new FFmpeg();
-      const load = ff.load({
-        classWorkerURL: ffmpegWorkerURL,
-        coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
-      });
+      const load = ff.load({ classWorkerURL: ffmpegWorkerURL, ...(await getCoreBlobs()) });
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("ffmpeg load timeout")), LOAD_TIMEOUT_MS),
       );
@@ -70,6 +80,20 @@ export async function preloadCore(): Promise<void> {
   await getFFmpeg();
 }
 
+// Libera por completo el heap de FFmpeg (mata el worker interno). La extracción
+// es de un solo uso por archivo; así no arrastramos cientos de MB al editor.
+function terminateFFmpeg(): void {
+  try {
+    ffmpeg?.terminate();
+  } catch {
+    /* ya terminado */
+  }
+  ffmpeg = null;
+  loadPromise = null;
+}
+
+const MOUNT = "/mnt";
+
 export async function extractAudio(file: File, cb: ExtractCallbacks = {}): Promise<ExtractedAudio> {
   const ff = await getFFmpeg(cb);
 
@@ -83,11 +107,31 @@ export async function extractAudio(file: File, cb: ExtractCallbacks = {}): Promi
   ff.on("progress", onProgress);
   ff.on("log", onLog);
 
+  // WORKERFS monta el File y lo lee por rangos, sin materializar el vídeo entero
+  // en un ArrayBuffer del hilo principal (eso reventaba móviles con clips grandes
+  // de galería). Fallback a writeFile solo si el File no tiene nombre.
+  const useMount = !!file.name;
+  let mounted = false;
+
   try {
     cb.onPhase?.("extracting");
-    await ff.writeFile("input", await fetchFile(file));
+    let input: string;
+    if (useMount) {
+      try {
+        await ff.createDir(MOUNT);
+      } catch {
+        /* el directorio puede existir de un intento anterior */
+      }
+      await ff.mount(FFFSType.WORKERFS, { files: [file] }, MOUNT);
+      mounted = true;
+      input = `${MOUNT}/${file.name}`;
+    } else {
+      await ff.writeFile("input", await fetchFile(file));
+      input = "input";
+    }
+
     // -vn descarta vídeo; PCM s16le mono 16 kHz → trivial de pasar a Float32.
-    const code = await ff.exec(["-i", "input", "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", "out.wav"]);
+    const code = await ff.exec(["-i", input, "-vn", "-ac", "1", "-ar", "16000", "-f", "wav", "out.wav"]);
     if (code !== 0) {
       // Solo es "sin audio" si ffmpeg lo dice; un archivo corrupto/no soportado
       // sale con código != 0 pero no debe etiquetarse como falta de pista.
@@ -98,14 +142,26 @@ export async function extractAudio(file: File, cb: ExtractCallbacks = {}): Promi
     }
 
     const data = (await ff.readFile("out.wav")) as Uint8Array;
-    await ff.deleteFile("input");
     await ff.deleteFile("out.wav");
+    if (!useMount) await ff.deleteFile("input");
 
     const { samples, sampleRate } = decodeWav(data);
+    terminateFFmpeg(); // libera el heap antes de editar/reproducir (clave en móvil)
+    mounted = false;
     return { audio: samples, sampleRate, duration: samples.length / sampleRate };
   } finally {
-    ff.off("progress", onProgress);
-    ff.off("log", onLog);
+    if (mounted && ffmpeg) {
+      try {
+        await ff.unmount(MOUNT);
+        await ff.deleteDir(MOUNT);
+      } catch {
+        /* worker ya terminado o sin montar */
+      }
+    }
+    if (ffmpeg) {
+      ff.off("progress", onProgress);
+      ff.off("log", onLog);
+    }
   }
 }
 

@@ -6,8 +6,8 @@ import { extractAudio, NoAudioError, type ExtractPhase } from "@/scripts/media/a
 import { session, setFile, setAudio, resetMedia, type MediaKind } from "@/scripts/session";
 import { markFfmpegReady } from "@/scripts/modelLoader";
 
-const VIDEO_EXT = ["mp4", "mov", "webm", "mkv"];
-const AUDIO_EXT = ["mp3", "wav", "ogg"];
+const VIDEO_EXT = ["mp4", "mov", "webm", "mkv", "m4v", "3gp", "3gpp", "avi", "ts", "mts", "ogv"];
+const AUDIO_EXT = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "opus", "oga", "weba"];
 
 // Aviso suave (no bloquea): archivos grandes/largos tardan y consumen RAM al
 // procesarse en el navegador.

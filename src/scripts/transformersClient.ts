@@ -88,6 +88,33 @@ export function transcribe(audio: Float32Array, language?: string): Promise<any>
   return send(getAsrWorker(), "transcribe", { audio: copy, language }, [copy.buffer]);
 }
 
+// Libera el modelo de transcripción (mata el worker → ~150-290 MB de RAM). Se
+// llama tras transcribir: el editor y el export no usan Whisper, y en móvil esa
+// RAM residente hacía OOM al reproducir. Se recarga (desde caché) si se vuelve.
+export function releaseAsr(): void {
+  if (!asrWorker) return;
+  for (const [id, p] of pending) {
+    if (p.worker !== asrWorker) continue;
+    p.reject(new Error("asr released"));
+    pending.delete(id);
+  }
+  asrWorker.terminate();
+  asrWorker = null;
+}
+
+// Libera el modelo de traducción (OPUS-MT fp32 ~300 MB). Igual que releaseAsr:
+// no se usa en el editor/playback y esa RAM residente hacía OOM en móvil.
+export function releaseTranslation(): void {
+  if (!transWorker) return;
+  for (const [id, p] of pending) {
+    if (p.worker !== transWorker) continue;
+    p.reject(new Error("translation released"));
+    pending.delete(id);
+  }
+  transWorker.terminate();
+  transWorker = null;
+}
+
 export function ensureTranslation(model: string, opts: { onProgress?: (p: any) => void } = {}): Promise<void> {
   onProgress.translation = opts.onProgress;
   return send(getTransWorker(), "ensure-translation", { model });

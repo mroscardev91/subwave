@@ -9,6 +9,7 @@ import * as segs from "@/scripts/editorSegments";
 import * as history from "@/scripts/editorHistory";
 import * as timeline from "@/scripts/timeline";
 import { translateSegments } from "@/scripts/translate";
+import { releaseTranslation } from "@/scripts/transformersClient";
 import { languageOptions, langLabel } from "@/scripts/languages";
 import { applyBubbleStyle, positionBubble, stylePresets, type SubtitleFont, type SubtitlePosition } from "@/scripts/subtitleStyle";
 import { fitSubtitle } from "@/scripts/export/subtitleRenderer";
@@ -830,6 +831,7 @@ async function addLanguage(code: string): Promise<void> {
         trackStatusEl.textContent = phase === "loading" ? c.downloadingTr : c.translating;
       },
     });
+    releaseTranslation(); // libera OPUS-MT (~300 MB): no se usa durante la edición
     const idx = addTrack({ lang: code, segments: translated });
     setActiveTrack(idx);
     segs.init();
