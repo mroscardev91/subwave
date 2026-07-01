@@ -177,7 +177,11 @@ export function initUploadStage(): void {
     } catch (err) {
       if (job !== activeJob) return;
       resetBtn.disabled = false;
-      showError(err instanceof NoAudioError ? t.errorNoAudio : t.errorGeneric);
+      console.error("[upload] extractAudio failed:", err);
+      // Muestra el detalle del error en pantalla (diagnóstico en móvil, sin consola).
+      const base = err instanceof NoAudioError ? t.errorNoAudio : t.errorGeneric;
+      const detail = err instanceof Error ? err.message : String(err);
+      showError(detail ? `${base} [${detail}]` : base);
     }
   }
 
