@@ -5,7 +5,7 @@
 // origen (no de un CDN), para que ninguna petición salga a terceros.
 
 import { FFmpeg, FFFSType } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+import { fetchFile } from "@ffmpeg/util";
 // Worker ESM de @ffmpeg/ffmpeg, empaquetado por Vite (?worker&url). FFmpeg crea
 // SIEMPRE el worker como módulo ES; en ese contexto el worker carga el core con
 // import() dinámico nativo (no importScripts). Hay que forzar a Vite a
@@ -14,9 +14,12 @@ import { fetchFile, toBlobURL } from "@ffmpeg/util";
 import ffmpegWorkerURL from "@ffmpeg/ffmpeg/worker?worker&url";
 
 // Core ESM (lo exige el import() dinámico del worker módulo). Self-hosteado en
-// public/ffmpeg/ (lo copia el script prebuild/predev desde @ffmpeg/core), así
-// que se sirve desde el mismo origen.
+// public/ffmpeg/ y servido desde el MISMO origen: se pasa la URL directa (NO un
+// blob:), porque iOS Safari no puede importar módulos desde blob: en un worker
+// ("Importing a module script failed"). La URL directa funciona en todos.
 const CORE_BASE = `${import.meta.env.BASE_URL}ffmpeg`;
+const CORE_URL = `${CORE_BASE}/ffmpeg-core.js`;
+const WASM_URL = `${CORE_BASE}/ffmpeg-core.wasm`;
 const LOAD_TIMEOUT_MS = 90_000;
 
 let ffmpeg: FFmpeg | null = null;
@@ -39,27 +42,13 @@ export interface ExtractedAudio {
 /** No audio stream in the source — surfaced to the UI as a clear message. */
 export class NoAudioError extends Error {}
 
-// Blob URLs del core, memoizados: toBlobURL crea object URLs que nunca se revocan,
-// así que al terminar/recargar FFmpeg entre extracciones se reutilizan en vez de
-// crear ~32 MB de blobs nuevos (fuga) en cada re-subida.
-let coreBlobs: { coreURL: string; wasmURL: string } | null = null;
-async function getCoreBlobs(): Promise<{ coreURL: string; wasmURL: string }> {
-  if (!coreBlobs) {
-    coreBlobs = {
-      coreURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await toBlobURL(`${CORE_BASE}/ffmpeg-core.wasm`, "application/wasm"),
-    };
-  }
-  return coreBlobs;
-}
-
 async function getFFmpeg(cb?: ExtractCallbacks): Promise<FFmpeg> {
   if (ffmpeg) return ffmpeg;
   if (!loadPromise) {
     loadPromise = (async () => {
       cb?.onPhase?.("loading");
       const ff = new FFmpeg();
-      const load = ff.load({ classWorkerURL: ffmpegWorkerURL, ...(await getCoreBlobs()) });
+      const load = ff.load({ classWorkerURL: ffmpegWorkerURL, coreURL: CORE_URL, wasmURL: WASM_URL });
       const timeout = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("ffmpeg load timeout")), LOAD_TIMEOUT_MS),
       );
